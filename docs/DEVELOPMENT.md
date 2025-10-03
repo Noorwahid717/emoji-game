@@ -1,249 +1,98 @@
-# Emoji Match Game - Development Guide
+# Emoji Match Game – Development Guide
 
-## 📋 Development Setup
+This document expands on the tooling, architecture, and workflows introduced in the README. Use it as a reference when working on new features or debugging issues.
 
-### Local Development Environment
+## 🖥️ Environment setup
 
-1. **Install Dependencies**:
-   ```bash
-   npm install
-   ```
-
-2. **Start Development Server**:
-   ```bash
-   npm run dev
-   ```
-   This will start a live-server on port 8080 with auto-reload.
-
-3. **Alternative Static Server**:
-   ```bash
-   npm start
-   ```
-
-## 🏗️ Architecture Overview
-
-### Scene Flow
-```
-Boot → Preloader → MainMenu → Game
-  ↑                               ↓
-  └─────────── (Game Over) ───────┘
+```bash
+npm install
+npm run dev
 ```
 
-### Key Components
+Vite serves the game at <http://localhost:5173> with hot module replacement. Update source files in `src/` and the browser reloads instantly.
 
-#### Scenes
-- **Boot**: Initializes game registry and basic setup
-- **Preloader**: Handles all asset loading with progress display
-- **MainMenu**: Displays title, high score, and game start
-- **Game**: Main gameplay loop with emoji matching logic
+### Recommended tools
 
-#### Configuration
-- **GameConfig.js**: Centralized configuration for all game settings
-  - Phaser settings
-  - Game mechanics
-  - Asset paths
-  - Styling options
+- Node.js 18+
+- A TypeScript-aware IDE (VS Code with the official TypeScript + ESLint extensions works well)
+- Browser dev tools (Phaser offers a robust debug overlay when needed)
 
-## 🎮 Game Mechanics
+## 🏗️ Architecture overview
 
-### Emoji Matching System
-1. 16 emojis arranged in a 4x4 grid
-2. 8 unique emoji types, each appearing twice
-3. Player clicks to select emojis
-4. Two selections create a match attempt
-5. Successful matches remove emojis and award points
-6. Game ends when all matches found or timer expires
-
-### Scoring System
-- **Base Points**: 100 points per match
-- **Time Bonus**: Additional points for quick matches
-- **Perfect Game Bonus**: Extra points for completing without mistakes
-
-### Timer System
-- Default: 60 seconds per game
-- Warning state at 10 seconds remaining
-- Game ends when timer reaches zero
-
-## 🔧 Customization Guide
-
-### Modifying Game Settings
-
-Edit `src/config/GameConfig.js`:
-
-```javascript
-// Change grid size
-gridSize: {
-    width: 6,  // More columns
-    height: 4  // Same rows
-}
-
-// Adjust timer
-timer: {
-    duration: 90,    // 90 seconds instead of 60
-    warningTime: 15  // Warning at 15 seconds
-}
-
-// Modify scoring
-scoring: {
-    matchPoints: 150,     // More points per match
-    timeBonus: 15,        // Higher time bonus
-    perfectMatchBonus: 750 // Higher perfect bonus
-}
+```
+Boot → Preloader → Menu → Game → GameOver
+  ↑                         ↓
+  └────────── restart ──────┘
 ```
 
-### Adding New Features
+### Key directories
 
-#### New Scene Creation
-1. Create new scene file in `src/scenes/`
-2. Extend `Phaser.Scene`
-3. Add to scene array in `main.js`
+- `src/config` – Validated configuration objects (grid size, timer, scoring, etc.).
+- `src/core` – Pure logic. Avoid Phaser APIs here so the code remains easily testable.
+  - `board/BoardGenerator.ts` handles deck creation and shuffling.
+  - `audio/SimpleAudio.ts` wraps Web Audio for match/mismatch cues.
+  - `storage/highScoreStorage.ts` persists high scores via `localStorage`.
+  - `locale/` provides translation helpers, locale detection, and change notifications.
+  - `haptics/` centralises vibration helpers and ensures graceful fallbacks on unsupported devices.
+- `src/scenes` – Phaser scenes orchestrating state transitions.
+- `src/ui` – HUD, buttons, and overlays built with Phaser game objects.
+- `src/assets` – Generated textures and the `static/` folder copied into the production build.
+- `tests/` – Vitest suites covering core logic modules.
 
-#### Custom Assets
-1. Add assets to appropriate `assets/` subfolder
-2. Update asset paths in `GameConfig.js`
-3. Load assets in `Preloader.js`
+## 🎮 Gameplay systems
 
-### Performance Optimization
+### Card lifecycle
 
-#### Asset Loading
-- Use asset atlases for multiple images
-- Compress audio files
-- Optimize image sizes
+1. `BoardGenerator` selects unique emoji indices and duplicates them into pairs.
+2. `GameScene` renders interactive card sprites backed by those texture keys.
+3. Card state (`isFaceUp`, `isMatched`) lives on the sprite instance, keeping checks lightweight.
+4. Matching updates the score using `GameConfig.game.scoring` and triggers celebratory tweens/audio.
 
-#### Code Optimization
-- Use object pooling for frequent objects
-- Minimize garbage collection
-- Efficient event handling
+### Timer & scoring
 
-## 🧪 Testing
+- Base duration and warning thresholds are configured in `GameConfig`.
+- The countdown runs via a Phaser timed event that updates the HUD every second.
+- Matches award `matchPoints + remainingTime * timeBonus`.
+- Mismatches deduct `mismatchPenalty` but never drop the score below zero.
+- Clearing the board grants `completionBonus` before transitioning to `GameOver`.
 
-### Manual Testing Checklist
-- [ ] Game loads without errors
-- [ ] All assets load properly
-- [ ] Audio plays correctly
-- [ ] Touch/click input works
-- [ ] Score tracking functions
-- [ ] High score persistence
-- [ ] Timer countdown works
-- [ ] Game over conditions trigger
-- [ ] Scene transitions smooth
+### High score persistence
 
-### Browser Compatibility
-- Chrome/Chromium (recommended)
-- Firefox
-- Safari
-- Edge
-- Mobile browsers
+`BootScene` loads the saved score from `localStorage`, storing it in the scene registry. `GameScene` compares the final score after each match, updates the registry, and persists via `persistHighScore`.
 
-## 📊 Performance Monitoring
+## ♿ Accessibility, input, and localisation
 
-### Key Metrics
-- Frame rate (target: 60 FPS)
-- Memory usage
-- Asset loading time
-- Scene transition smoothness
+- The HUD announces score/timer updates through `aria-live` helpers in [`src/ui/accessibility/liveRegions.ts`](../src/ui/accessibility/liveRegions.ts).
+- Keyboard navigation lives inside `GameScene`. Arrow keys or WASD move the focus ring; **Enter**/**Space** flips the focused card.
+- HUD toggles persist audio mute and colour-blind mode via [`preferencesStorage`](../src/core/storage/preferencesStorage.ts).
+- Locale switching happens in `MenuScene` and uses the localisation helpers (`src/core/locale`). Restarting the scene reloads translated copy and saves the preference.
+- `src/core/haptics/vibration.ts` wraps `navigator.vibrate` to provide match/mismatch feedback without breaking unsupported browsers.
 
-### Debug Mode
-Enable debug mode in `GameConfig.js`:
-```javascript
-physics: {
-    default: 'arcade',
-    arcade: {
-        debug: true  // Shows physics bodies
-    }
-}
-```
+## 🧪 Testing strategy
 
-## 🚀 Deployment
+- **Vitest** focuses on deterministic logic: shuffling, formatting, scoring helpers, etc.
+- Tests live alongside the domain they cover (`tests/core/...`).
+- Run `npm run test` in CI mode or `npm run test:watch` while iterating.
 
-### Static Hosting
-This game can be deployed to any static hosting service:
-- GitHub Pages
-- Netlify
-- Vercel
-- Firebase Hosting
+Future ideas: add snapshot tests for UI overlays (Menu/GameOver) using Phaser's DOM-to-canvas rendering.
 
-### Build Process
-Currently no build process required - all files are served directly.
+## 🔍 Debugging tips
 
-Future enhancements could include:
-- Asset bundling
-- Code minification
-- Progressive Web App features
+- Enable Phaser debug output via `this.add.graphics()` overlays inside scenes or by logging registry values.
+- Use the browser dev tools performance tab to inspect tween timelines and memory usage.
+- Temporarily lower `GameConfig.game.timer.duration` for faster repros of time-based flows.
 
-## 🔍 Troubleshooting
+## 📦 Build & deployment
 
-### Common Issues
+- `npm run build` outputs the game into `dist/` with sourcemaps enabled.
+- Assets from `public/` and `src/assets/static/` are copied as-is; generated textures are produced at runtime.
+- The project is ready for static hosting (GitHub Pages, Netlify, Cloudflare Pages). The provided GitHub Actions workflow publishes the `dist/` directory to `gh-pages` on pushes to `main`.
 
-**Game doesn't load**:
-- Check browser console for errors
-- Ensure all file paths are correct
-- Verify Phaser.js CDN is accessible
+## ✅ Pre-merge checklist
 
-**Assets not loading**:
-- Check network tab for failed requests
-- Verify asset URLs in GameConfig.js
-- Ensure CORS policies allow asset loading
+- [ ] All lint and test commands succeed.
+- [ ] Scenes remain navigable via keyboard and pointer input.
+- [ ] No regression in frame pacing (target 60 FPS on a mid-range laptop).
+- [ ] Documentation updated where behaviour or tooling changed.
 
-**Audio not playing**:
-- Check browser audio policies
-- Ensure user interaction before audio playback
-- Verify audio file formats supported
-
-**Performance issues**:
-- Monitor browser performance tools
-- Check for memory leaks
-- Optimize asset sizes
-
-## 📝 Code Style Guide
-
-### JavaScript Conventions
-- Use ES6+ features
-- Prefer `const` and `let` over `var`
-- Use arrow functions where appropriate
-- Follow camelCase naming convention
-
-### Scene Structure
-```javascript
-export default class SceneName extends Phaser.Scene {
-    constructor() {
-        super('SceneName');
-        // Initialize properties
-    }
-
-    preload() {
-        // Load assets
-    }
-
-    create() {
-        // Create game objects
-    }
-
-    update() {
-        // Game loop logic
-    }
-}
-```
-
-## 🔮 Future Enhancements
-
-### Planned Features
-- [ ] Multiple difficulty levels
-- [ ] Power-ups and special abilities
-- [ ] Leaderboard system
-- [ ] Achievement system
-- [ ] Mobile-optimized controls
-- [ ] Customizable themes
-- [ ] Multiplayer support
-
-### Technical Improvements
-- [ ] Asset bundling system
-- [ ] Unit testing framework
-- [ ] Continuous integration
-- [ ] Progressive Web App features
-- [ ] Offline support
-- [ ] Analytics integration
-
----
-
-Happy coding! 🚀
+Happy hacking! 🧑‍💻

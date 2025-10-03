@@ -1,190 +1,73 @@
 # Contributing to Emoji Match Game
 
-Thank you for your interest in contributing to the Emoji Match Game! This document provides guidelines for contributing to this project.
+Thank you for your interest in improving the Emoji Match Game! This guide highlights the workflow, coding standards, and quality checks that keep the project healthy.
 
-## 🤝 How to Contribute
+## 🤝 How to contribute
 
-### Reporting Issues
-- Use the GitHub issue tracker
-- Provide detailed descriptions
-- Include steps to reproduce bugs
-- Add screenshots if applicable
+### Reporting issues
 
-### Suggesting Features
-- Open an issue with the "feature request" label
-- Describe the feature and its benefits
-- Explain how it fits with the game's goals
+- Use the GitHub issue tracker and search for existing tickets first.
+- Describe the problem, reproduction steps, and expected vs actual behaviour.
+- Add screenshots or screen recordings for visual or UX bugs.
 
-### Code Contributions
+### Suggesting features
 
-#### Getting Started
-1. Fork the repository
-2. Clone your fork locally
-3. Create a feature branch: `git checkout -b feature-name`
-4. Make your changes
-5. Test thoroughly
-6. Commit with clear messages
-7. Push to your fork
-8. Open a pull request
+- Open an issue with the **feature request** label.
+- Explain the value for players or maintainers and include mockups when possible.
+- Scope ideas so they can be delivered in incremental pull requests.
 
-#### Code Standards
-- Follow existing code style
-- Use meaningful variable names
-- Comment complex logic
-- Keep functions small and focused
-- Test your changes
+### Code contributions
 
-#### Pull Request Guidelines
-- Provide a clear description
-- Reference related issues
-- Include screenshots for UI changes
-- Ensure all tests pass
-- Keep changes focused and atomic
+1. Fork the repository and clone your fork locally.
+2. Create a feature branch: `git checkout -b feature/amazing-improvement`.
+3. Install dependencies with `npm install`.
+4. Run `npm run dev` for a live-reloading playground during development.
+5. Add or update tests alongside your changes (`npm run test`).
+6. Ensure linting and formatting succeed: `npm run lint` and `npm run format`.
+7. Commit using meaningful messages and push the branch to your fork.
+8. Open a pull request that links the relevant issue and summarises the change.
 
-## 🛠️ Development Process
+## 🧰 Project conventions
 
-### Setting Up Development Environment
-```bash
-git clone https://github.com/yourusername/emoji-match-game.git
-cd emoji-match-game
-npm install
-npm run dev
-```
+- **Language & tooling**: The codebase is TypeScript-first, bundled with Vite. Prefer TypeScript over plain JS for new modules.
+- **Architecture**: Keep gameplay logic inside `src/core`, rendering inside `src/ui`, and state orchestration within `src/scenes`.
+- **Localization**: Add new copy to `src/core/locale/translations.ts`, updating every supported locale and keeping placeholders consistent.
+- **Formatting**: Prettier enforces formatting. ESLint runs with the strict TypeScript ruleset; fix warnings before committing.
+- **Git hooks**: Husky + lint-staged automatically run ESLint/Prettier on staged files. Do not bypass hooks unless absolutely necessary.
+- **Testing**: Vitest covers deterministic logic (board generation, scoring, utilities). Add or update specs when behaviour changes.
 
-### Testing Changes
-- Test on multiple browsers
-- Verify mobile compatibility
-- Check performance impact
-- Ensure accessibility standards
+## 📦 Useful scripts
 
-### Code Review Process
-- All changes require review
-- Address feedback promptly
-- Be open to suggestions
-- Collaborate constructively
+| Command                | Purpose                                      |
+| ---------------------- | -------------------------------------------- |
+| `npm run dev`          | Start the hot-reloading development server.  |
+| `npm run build`        | Produce an optimized production bundle.      |
+| `npm run preview`      | Preview the production bundle locally.       |
+| `npm run lint`         | Run ESLint with `--max-warnings=0`.          |
+| `npm run format`       | Check formatting using Prettier.             |
+| `npm run format:write` | Apply Prettier formatting fixes.             |
+| `npm run test`         | Execute Vitest suites in CI mode.            |
+| `npm run test:watch`   | Run Vitest in watch mode during development. |
 
-## 📋 Areas for Contribution
+## 🧪 Testing checklist
 
-### High Priority
-- Bug fixes
-- Performance improvements
-- Accessibility enhancements
-- Mobile optimization
+Before submitting a pull request:
 
-### Medium Priority
-- New game features
-- UI/UX improvements
-- Audio enhancements
-- Documentation updates
+- [ ] All Vitest suites pass (`npm run test`).
+- [ ] Linting succeeds (`npm run lint`).
+- [ ] UI changes include updated screenshots (attach to the PR).
+- [ ] Accessibility impacts have been considered (focus states, keyboard input, colour contrast).
 
-### Low Priority
-- Code refactoring
-- Additional animations
-- Easter eggs
-- Theme variations
+## 📚 Documentation
 
-## 🎨 Design Guidelines
+- Update [`README.md`](README.md) for new features or workflows.
+- Document architectural changes in dedicated markdown files inside `docs/` when appropriate.
+- Keep inline comments concise and focused on _why_ rather than _what_.
 
-### Visual Design
-- Maintain current color scheme
-- Ensure consistent spacing
-- Use readable fonts
-- Consider accessibility
+## 🚀 Release notes
 
-### User Experience
-- Keep interactions intuitive
-- Provide clear feedback
-- Maintain responsive design
-- Consider different skill levels
+- Follow semantic versioning (`major.minor.patch`).
+- Update [`CHANGELOG.md`](CHANGELOG.md) with a summary of user-facing changes.
+- Ensure GitHub Actions pipelines (lint, test, build, deploy) succeed before merging into `main`.
 
-### Audio Design
-- Use appropriate volume levels
-- Provide audio toggle options
-- Ensure audio enhances gameplay
-- Consider accessibility needs
-
-## 📝 Documentation
-
-### Required Documentation
-- Update README.md for new features
-- Add inline code comments
-- Update DEVELOPMENT.md for technical changes
-- Include usage examples
-
-### Documentation Style
-- Use clear, concise language
-- Include code examples
-- Add screenshots where helpful
-- Keep information current
-
-## ⚡ Performance Guidelines
-
-### Optimization Priorities
-1. Smooth 60 FPS gameplay
-2. Fast loading times
-3. Efficient memory usage
-4. Responsive interactions
-
-### Best Practices
-- Use object pooling for frequent objects
-- Optimize asset sizes
-- Minimize garbage collection
-- Profile performance changes
-
-## 🧪 Testing
-
-### Manual Testing Requirements
-- Test on multiple browsers
-- Verify mobile functionality
-- Check accessibility features
-- Validate all game mechanics
-
-### Automated Testing (Future)
-- Unit tests for game logic
-- Integration tests for scenes
-- Performance benchmarks
-- Accessibility audits
-
-## 🚀 Release Process
-
-### Version Numbering
-- Follow semantic versioning (semver)
-- Major: Breaking changes
-- Minor: New features
-- Patch: Bug fixes
-
-### Release Checklist
-- [ ] All tests pass
-- [ ] Documentation updated
-- [ ] Version number bumped
-- [ ] Changelog updated
-- [ ] Performance verified
-- [ ] Cross-browser tested
-
-## 💬 Communication
-
-### Channels
-- GitHub Issues: Bug reports and feature requests
-- GitHub Discussions: General questions and ideas
-- Pull Request Comments: Code-specific discussions
-
-### Guidelines
-- Be respectful and constructive
-- Stay on topic
-- Provide context and details
-- Help others when possible
-
-## 🙏 Recognition
-
-Contributors will be recognized in:
-- README.md contributors section
-- CHANGELOG.md release notes
-- GitHub contributor graph
-
-## 📄 License
-
-By contributing, you agree that your contributions will be licensed under the same MIT License that covers the project.
-
----
-
-Thank you for contributing to make this game better! 🎮✨
+We appreciate your time and creativity—happy building! 💙
