@@ -31,7 +31,6 @@ Thank you for your interest in improving the Emoji Match Game! This guide highli
 
 - **Language & tooling**: The codebase is TypeScript-first, bundled with Vite. Prefer TypeScript over plain JS for new modules.
 - **Architecture**: Keep gameplay logic inside `src/core`, rendering inside `src/ui`, and state orchestration within `src/scenes`.
-- **Localization**: Add new copy to `src/core/locale/translations.ts`, updating every supported locale and keeping placeholders consistent.
 - **Formatting**: Prettier enforces formatting. ESLint runs with the strict TypeScript ruleset; fix warnings before committing.
 - **Git hooks**: Husky + lint-staged automatically run ESLint/Prettier on staged files. Do not bypass hooks unless absolutely necessary.
 - **Testing**: Vitest covers deterministic logic (board generation, scoring, utilities). Add or update specs when behaviour changes.

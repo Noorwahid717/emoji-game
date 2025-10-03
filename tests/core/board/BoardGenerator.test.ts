@@ -18,7 +18,7 @@ describe('BoardGenerator', () => {
     expect(cards).toHaveLength(16);
   });
 
-  it('duplicates every texture exactly twice', () => {
+  it('duplicates every match id exactly twice and uses atlas frames', () => {
     const generator = new BoardGenerator(mockRandom());
     const cards = generator.generatePairs(4, 8);
 
@@ -29,6 +29,9 @@ describe('BoardGenerator', () => {
 
     expect(Object.values(matchCounts)).toStrictEqual([2, 2, 2, 2]);
     expect(cards.every((card) => card.textureKey === 'emoji-atlas')).toBe(true);
+    expect(cards.every((card) => typeof card.frame === 'string' && card.frame.length > 0)).toBe(
+      true,
+    );
   });
 
   it('throws when not enough emoji textures are available', () => {
