@@ -5,6 +5,13 @@ All notable changes to the Emoji Match Game will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2025-03-08
+
+### Changed
+
+- 🔧 Pinned the TypeScript toolchain to 5.3.x to stay within the supported range of our ESLint plugins.
+- 🧾 Bumped the package manifest version to keep npm metadata in sync with the documented releases.
+
 ## [1.3.0] - 2025-03-07
 
 ### Added

@@ -70,6 +70,7 @@ export class SimpleAudio {
       await this.playBuffer('match');
       return;
     }
+
     await this.playTone(660, 0.18, 0.18);
   }
 
@@ -78,6 +79,7 @@ export class SimpleAudio {
       await this.playBuffer('countdown');
       return;
     }
+
     await this.playTone(220, 0.3, 0.16);
   }
 
@@ -86,6 +88,7 @@ export class SimpleAudio {
       await this.playBuffer('success');
       return;
     }
+
     await this.playSequence([
       { frequency: 440, duration: 0.12, volume: 0.12 },
       { frequency: 560, duration: 0.12, volume: 0.12 },
@@ -98,6 +101,7 @@ export class SimpleAudio {
       await this.playBuffer('mismatch');
       return;
     }
+
     await this.playSequence([
       { frequency: 330, duration: 0.12, volume: 0.12 },
       { frequency: 210, duration: 0.24, volume: 0.16 },

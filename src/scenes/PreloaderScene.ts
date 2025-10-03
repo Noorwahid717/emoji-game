@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 
 import { createGeneratedAssets } from '../assets/createGeneratedAssets';
 import simpleAudio from '../core/audio/SimpleAudio';
+import { t } from '../core/locale/Localization';
 
 class PreloaderScene extends Phaser.Scene {
   private progressBar?: Phaser.GameObjects.Graphics;
@@ -60,7 +61,7 @@ class PreloaderScene extends Phaser.Scene {
 
     this.progressBar = this.add.graphics();
     this.progressText = this.add
-      .text(width / 2, height / 2 + 48, 'Loading…', {
+      .text(width / 2, height / 2 + 48, t('preloader.loading'), {
         fontFamily: '"Segoe UI", Arial, sans-serif',
         fontSize: '24px',
         color: '#f8fafc',
@@ -81,7 +82,7 @@ class PreloaderScene extends Phaser.Scene {
     const total = this.load.totalToLoad;
     const complete = this.load.totalComplete;
     const percent = Number.isFinite(value) ? Math.round(value * 100) : 100;
-    this.progressText.setText(`Loading ${percent}% (${complete}/${total})`);
+    this.progressText.setText(t('preloader.loadingProgress', { percent, complete, total }));
   }
 
   private async prepareAudio(): Promise<void> {

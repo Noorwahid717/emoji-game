@@ -1,6 +1,6 @@
 {
   "name": "emoji-match-game",
-  "version": "1.1.0",
+  "version": "1.3.1",
   "description": "A modernized emoji matching game built with Phaser and Vite",
   "type": "module",
   "scripts": {
@@ -36,7 +36,7 @@
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "prettier": "^3.2.5",
-    "typescript": "^5.4.5",
+    "typescript": "~5.3.3",
     "vite": "^5.2.0",
     "vite-plugin-static-copy": "^0.17.1",
     "vitest": "^1.5.0"

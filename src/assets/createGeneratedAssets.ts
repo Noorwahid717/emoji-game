@@ -67,22 +67,15 @@ const createBackgroundTexture = (scene: Phaser.Scene): void => {
 const createLogoTexture = (scene: Phaser.Scene): void => {
   const ctx = createCanvas(460, 170);
   drawRoundedRect(ctx, 10, 10, 440, 150, 24);
-  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  const gradient = ctx.createLinearGradient(10, 10, 450, 160);
+  gradient.addColorStop(0, '#e0f2fe');
+  gradient.addColorStop(1, '#c7d2fe');
+  ctx.fillStyle = gradient;
   ctx.fill();
 
   ctx.lineWidth = 4;
   ctx.strokeStyle = '#1f2933';
   ctx.stroke();
-
-  ctx.fillStyle = '#1f2933';
-  ctx.font = 'bold 44px "Segoe UI Emoji", "Apple Color Emoji", Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('Emoji Match', 230, 70);
-
-  ctx.font = '22px "Segoe UI", Arial';
-  ctx.fillStyle = '#3a506b';
-  ctx.fillText('Find all of the matching pairs!', 230, 110);
 
   scene.textures.addCanvas('logo', ctx.canvas);
 };

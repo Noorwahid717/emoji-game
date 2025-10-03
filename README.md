@@ -8,9 +8,12 @@ A modernized emoji matching game built with [Phaser 3](https://phaser.io/), Type
 - **Modular architecture** that separates gameplay logic, scenes, UI, and assets.
 - **Tree-shaken Vite build** for fast development reloads and optimized production bundles.
 - **Generated visuals & emoji atlas** so the game runs without external CDN dependencies while minimizing texture swaps.
-- **Config-driven gameplay** – tweak grid size, scoring, and timer settings in one place.
+- **Config-driven gameplay** – tweak level layouts, scoring rules, and timer behaviour from one TypeScript file.
+- **Dynamic difficulty** with escalating board sizes, streak multipliers, and multiple play styles (Classic, Zen, Hard, Daily Challenge).
+- **Power-ups & missions** introduce quick strategy boosts (hint, freeze, shuffle) alongside rotating daily/weekly goals.
 - **Responsive rendering** with DPR-aware scaling that keeps the canvas sharp on mobile without overworking the GPU.
 - **Preloading with audio warm-up** – the progress bar surfaces load status and keeps the Web Audio context responsive with a HUD mute toggle.
+- **Accessible & localized UI** with keyboard navigation, screen reader live regions, haptic feedback, and English/Bahasa Indonesia text.
 - **Automated quality checks** via ESLint, Prettier, Vitest, Husky, and GitHub Actions.
 
 ## 🚀 Quick start
@@ -39,15 +42,38 @@ emoji-game/
 └── vite.config.ts         # Build configuration + static asset pipeline
 ```
 
-Key configuration lives in [`src/config/GameConfig.ts`](src/config/GameConfig.ts). It validates the grid size, timer, and scoring to ensure playable combinations. Update the config to experiment with larger boards, different time limits, or alternative scoring rules.
+Key configuration lives in [`src/config/GameConfig.ts`](src/config/GameConfig.ts). It validates the level progression, mode-specific timers, streak multipliers, and available power-ups to ensure playable combinations. Update the config to experiment with larger boards, alternative time bonuses, or different power-up inventories.
 
 ## 🕹️ Gameplay basics
 
-1. Press **Start Game** from the menu.
-2. Flip two cards at a time to reveal their emoji.
-3. Find matching pairs to earn points and time bonuses.
-4. Clear the board before the countdown reaches zero for an extra completion bonus.
-5. Your best score is saved locally between sessions.
+1. Pick a mode from the main menu – Classic, Zen, Hard, or the Daily Challenge seed.
+2. Flip two cards at a time to reveal their emoji, chaining matches to build streak multipliers.
+3. Spend limited-use power-ups (hint, freeze, shuffle) when the board gets tricky.
+4. Beat the timer (or minimise moves in Zen) as the grid grows from 4×3 to 6×5 and beyond.
+5. Complete daily/weekly missions to keep returning and compete for local high scores.
+
+## 🎮 Game modes
+
+- **Classic** – balanced timers, generous power-ups, and time bonuses for match streaks.
+- **Zen** – no timer; the HUD tracks moves so you can chase a perfect clear.
+- **Hard** – tighter timers, heavier mismatch penalties, and higher scoring for expert play.
+- **Daily Challenge** – a deterministic seeded run that resets each day for bragging-rights leaderboards.
+
+## 🛠️ Power-ups & missions
+
+- **Hint** briefly reveals a matching pair.
+- **Freeze Time** pauses the countdown for a few seconds to catch your breath.
+- **Shuffle** rearranges all unmatched cards.
+- **Missions** track progress for “no hint” clears, high streaks, and weekly board completions. They reset automatically each day/week and persist in local storage.
+
+## ♿ Accessibility & controls
+
+- **Keyboard**: Use the arrow keys (or WASD) to move the focus between cards and press **Enter**/**Space** to flip them.
+- **Pointer & touch**: Tap or click cards to reveal them. Buttons support pointer and touch interactions.
+- **Audio & haptics**: Toggle sound effects from the HUD. Supported devices vibrate on matches and mismatches.
+- **Screen readers**: Score and timer updates are announced via `aria-live` regions, and the game container exposes an `aria-label`.
+- **Colour blind mode**: Switch palettes from the HUD to increase contrast for red/green colour blindness.
+- **Localization**: Cycle between English and Bahasa Indonesia from the menu; the choice persists between sessions.
 
 ## 🧪 Tooling & scripts
 
