@@ -2,11 +2,13 @@ import Phaser from 'phaser';
 
 import simpleAudio from '../core/audio/SimpleAudio';
 import { detectLocale, initLocale, t } from '../core/locale/Localization';
-import { loadHighScore } from '../core/storage/highScoreStorage';
+import { getDailySeed } from '../core/random/seededRandom';
+import { loadAllHighScores } from '../core/storage/highScoreStorage';
 import {
   loadAudioPreference,
   loadColorBlindPreference,
   loadLocalePreference,
+  loadModePreference,
 } from '../core/storage/preferencesStorage';
 import { resetLiveRegions } from '../ui/accessibility/liveRegions';
 
@@ -16,12 +18,16 @@ class BootScene extends Phaser.Scene {
   }
 
   public init(): void {
-    const highScore = loadHighScore();
-    this.registry.set('highscore', highScore);
+    const highScores = loadAllHighScores();
+    this.registry.set('highscores', highScores);
     const audioMuted = loadAudioPreference();
     this.registry.set('audioMuted', audioMuted);
     const colorBlindMode = loadColorBlindPreference();
     this.registry.set('colorBlindMode', colorBlindMode);
+    const preferredMode = loadModePreference();
+    this.registry.set('mode', preferredMode);
+    const dailySeed = getDailySeed();
+    this.registry.set('dailySeed', dailySeed);
 
     const savedLocale = loadLocalePreference();
     const locale = savedLocale === 'auto' ? detectLocale() : savedLocale;

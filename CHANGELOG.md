@@ -5,6 +5,22 @@ All notable changes to the Emoji Match Game will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-03-07
+
+### Added
+
+- 🧩 Dynamic level progression (4×3 → 6×5) with mode-specific streak multipliers and time bonuses.
+- 🎯 New game modes: Classic, Zen, Hard, and a deterministic Daily Challenge seed.
+- ⚡ HUD power-ups (Hint, Freeze Time, Shuffle) with accessibility-friendly status messaging.
+- 🗓️ Daily and weekly mission tracking with automatic resets and localisation support.
+
+### Changed
+
+- 🧠 `GameConfig` now models levels, mode rules, and power-up inventories in a single validated schema.
+- 🎮 `GameScene` was refactored to support multi-level runs, keyboard/touch parity, and mission reporting.
+- 🧱 Menu scene showcases per-mode highscores, mission progress, and persists the last-selected mode.
+- 📝 Documentation updated to cover modes, power-ups, missions, and the revised configuration surface.
+
 ## [1.2.0] - 2025-03-04
 
 ### Added

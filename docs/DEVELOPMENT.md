@@ -27,7 +27,7 @@ Boot → Preloader → Menu → Game → GameOver
 
 ### Key directories
 
-- `src/config` – Validated configuration objects (grid size, timer, scoring, etc.).
+- `src/config` – Validated configuration objects (level definitions, mode-specific timers, scoring, and power-ups).
 - `src/core` – Pure logic. Avoid Phaser APIs here so the code remains easily testable.
   - `board/BoardGenerator.ts` handles deck creation and shuffling.
   - `audio/SimpleAudio.ts` wraps Web Audio for match/mismatch cues.
@@ -46,19 +46,21 @@ Boot → Preloader → Menu → Game → GameOver
 1. `BoardGenerator` selects unique emoji indices and duplicates them into pairs.
 2. `GameScene` renders interactive card sprites backed by those texture keys.
 3. Card state (`isFaceUp`, `isMatched`) lives on the sprite instance, keeping checks lightweight.
-4. Matching updates the score using `GameConfig.game.scoring` and triggers celebratory tweens/audio.
+4. Matching feeds streak multipliers from the active mode in `GameConfig.game.modes`, then triggers celebratory tweens/audio.
 
-### Timer & scoring
+### Timer, streaks, and scoring
 
-- Base duration and warning thresholds are configured in `GameConfig`.
-- The countdown runs via a Phaser timed event that updates the HUD every second.
-- Matches award `matchPoints + remainingTime * timeBonus`.
-- Mismatches deduct `mismatchPenalty` but never drop the score below zero.
-- Clearing the board grants `completionBonus` before transitioning to `GameOver`.
+- Each mode in `GameConfig` defines whether the timer is enabled, its warning threshold, streak time bonuses, and mismatch penalties.
+- The countdown runs via a Phaser timed event; **Freeze** power-ups temporarily pause the tick handler.
+- Matches award `matchPoints` scaled by `streakMultiplierStep`, then optionally add time using the level's base bonus plus the mode's streak bonus.
+- Mismatches reset the streak, deduct the configured `mismatchPenalty`, and in Hard/Daily also subtract time.
+- Clearing a board grants a `completionBonus`, with an additional `perfectBonus` for zero mismatches.
 
-### High score persistence
+### High score persistence & missions
 
-`BootScene` loads the saved score from `localStorage`, storing it in the scene registry. `GameScene` compares the final score after each match, updates the registry, and persists via `persistHighScore`.
+- `BootScene` loads per-mode high scores (plus the seeded Daily score) from `localStorage` and stores them in the scene registry.
+- `GameScene` compares the final score against the active mode and persists via `persistHighScore(mode, score, seed?)`.
+- Mission progress lives in [`src/core/missions`](../src/core/missions); the helper automatically resets daily/weekly counters and persists back to storage.
 
 ## ♿ Accessibility, input, and localisation
 
