@@ -1,108 +1,85 @@
 # Emoji Match Game 🎮
 
-A fun and engaging emoji matching game built with Phaser.js. Players need to match emoji pairs within a time limit to achieve the highest score possible.
+A modernized emoji matching game built with [Phaser 3](https://phaser.io/), TypeScript, and Vite. Match all pairs before the timer expires, chain combos to push your score higher, and challenge yourself to beat the saved high score.
 
-## 🎯 Game Features
+## ✨ Highlights
 
-- **Interactive Gameplay**: Click on emoji cards to find matching pairs
-- **Timer Challenge**: Race against time to find all matches
-- **Score System**: Earn points for each successful match
-- **High Score Tracking**: Your best score is saved locally
-- **Responsive Design**: Works on desktop and mobile devices
-- **Audio Effects**: Immersive sound effects and background music
+- **TypeScript-first Phaser setup** with strict typing for safer refactors.
+- **Modular architecture** that separates gameplay logic, scenes, UI, and assets.
+- **Tree-shaken Vite build** for fast development reloads and optimized production bundles.
+- **Generated visuals** so the game runs without external CDN dependencies.
+- **Config-driven gameplay** – tweak grid size, scoring, and timer settings in one place.
+- **Automated quality checks** via ESLint, Prettier, Vitest, Husky, and GitHub Actions.
 
-## 🚀 Getting Started
+## 🚀 Quick start
 
-### Prerequisites
-- Modern web browser with JavaScript support
-- Node.js (optional, for development server)
-
-### Installation
-
-1. Clone or download this repository
-2. Navigate to the project directory
-3. Install dependencies (optional):
-   ```bash
-   npm install
-   ```
-
-### Running the Game
-
-#### Option 1: Simple Local Server
 ```bash
-npm start
-```
-
-#### Option 2: Development Server with Live Reload
-```bash
+npm install
 npm run dev
 ```
 
-#### Option 3: Direct File Access
-Simply open `index.html` in your web browser.
+The game opens automatically at <http://localhost:5173>. To create a production bundle use `npm run build`, and preview it locally with `npm run preview`.
 
-## 📁 Project Structure
+## 🧱 Project structure
 
 ```
-emojigame/
+emoji-game/
 ├── src/
-│   ├── scenes/          # Game scenes (Boot, Preloader, MainMenu, Game)
-│   ├── config/          # Configuration files
-│   └── main.js          # Main entry point
-├── assets/
-│   ├── images/          # Game images and sprites
-│   └── sounds/          # Audio files
-├── docs/                # Documentation
-├── index.html           # Main HTML file
-├── package.json         # Project configuration
-└── README.md           # This file
+│   ├── assets/            # Runtime generated textures + static asset staging
+│   ├── config/            # Centralized game configuration (timing, scoring, etc.)
+│   ├── core/              # Pure game logic (board generation, storage, audio utils)
+│   ├── scenes/            # Phaser scenes (Boot, Preloader, Menu, Game, GameOver)
+│   ├── ui/                # HUD and reusable UI components
+│   └── main.ts            # Vite entry point
+├── tests/                 # Vitest suites for deterministic game logic
+├── public/                # Static assets copied verbatim to the build output
+├── index.html             # Vite HTML entrypoint
+└── vite.config.ts         # Build configuration + static asset pipeline
 ```
 
-## 🎮 How to Play
+Key configuration lives in [`src/config/GameConfig.ts`](src/config/GameConfig.ts). It validates the grid size, timer, and scoring to ensure playable combinations. Update the config to experiment with larger boards, different time limits, or alternative scoring rules.
 
-1. **Start the Game**: Click on the logo or "Click to Start" button
-2. **Find Matches**: Click on emoji cards to reveal them
-3. **Make Pairs**: Find two matching emojis to score points
-4. **Beat the Clock**: Match all pairs before time runs out
-5. **High Score**: Try to beat your previous best score!
+## 🕹️ Gameplay basics
 
-## 🛠️ Development
+1. Press **Start Game** from the menu.
+2. Flip two cards at a time to reveal their emoji.
+3. Find matching pairs to earn points and time bonuses.
+4. Clear the board before the countdown reaches zero for an extra completion bonus.
+5. Your best score is saved locally between sessions.
 
-### File Structure Explanation
+## 🧪 Tooling & scripts
 
-- **src/scenes/**: Contains all Phaser game scenes
-  - `Boot.js`: Initial game setup and registry initialization
-  - `Preloader.js`: Asset loading screen
-  - `MainMenu.js`: Main menu with high score display
-  - `Game.js`: Main gameplay scene
-- **src/config/**: Configuration files for game settings
-- **assets/**: Static assets (images, sounds) - currently loaded from CDN
+| Command                | Description                                                    |
+| ---------------------- | -------------------------------------------------------------- |
+| `npm run dev`          | Start the Vite development server with hot-module replacement. |
+| `npm run build`        | Generate a production build with source maps.                  |
+| `npm run preview`      | Serve the production build locally.                            |
+| `npm run lint`         | Run ESLint with the strict TypeScript ruleset.                 |
+| `npm run format`       | Check formatting with Prettier.                                |
+| `npm run format:write` | Auto-format supported files.                                   |
+| `npm run test`         | Execute Vitest in CI mode.                                     |
+| `npm run test:watch`   | Run Vitest in watch mode.                                      |
 
-### Customization
+Git hooks via Husky ensure staged files pass linting and formatting before every commit.
 
-You can customize the game by modifying:
-- `src/config/GameConfig.js`: Game settings, colors, timing, scoring
-- Asset URLs and paths
-- Game mechanics in individual scene files
+## 🧰 Development notes
 
-## 🎨 Assets
+- **Board generation** lives in [`src/core/board/BoardGenerator.ts`](src/core/board/BoardGenerator.ts). It produces shuffled card pairs from the available emoji texture pool and is covered by unit tests.
+- **HUD & UI** components are in [`src/ui`](src/ui). Scenes interact with UI helpers instead of drawing text directly, which keeps rendering concerns isolated.
+- **Audio** feedback uses a lightweight Web Audio helper (`src/core/audio/SimpleAudio.ts`) that gracefully degrades if the API is unavailable.
+- **Static assets** can be dropped into `src/assets/static`. They are copied into the build output by `vite-plugin-static-copy` so the game no longer depends on third-party CDNs.
 
-This game uses assets from the Phaser.js examples repository. All assets are loaded from CDN for easy setup.
+## 🤝 Contributing
 
-## 📝 License
+1. Fork the repository and create a feature branch.
+2. Install dependencies with `npm install`.
+3. Run `npm run lint` and `npm run test` before opening a pull request.
+4. For UI changes, include a screenshot of the updated screen states when possible.
 
-This project is licensed under the MIT License - see the package.json file for details.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for more details about branching and coding conventions.
 
-## 🙏 Credits
+## 📄 License
 
-- Original game concept by Tom Miller
-- Built with [Phaser.js](https://phaser.io/)
-- Emoji assets from Phaser Examples
+Released under the MIT License. See [`LICENSE`](LICENSE) for full details.
 
-## 🐛 Issues and Contributions
-
-Feel free to report issues or contribute to this project. This is a learning project and contributions are welcome!
-
----
-
-**Enjoy playing! 🎮✨**
+Happy matching! 🎉
