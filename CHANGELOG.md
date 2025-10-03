@@ -5,9 +5,27 @@ All notable changes to the Emoji Match Game will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-03-01
+
+### Added
+
+- ♻️ Migrated the game to a Vite + TypeScript toolchain with strict typing and module bundling.
+- 🧱 Reorganized source into `core/`, `ui/`, and `scenes/` domains with a new GameOver flow.
+- 🧪 Added Vitest suites covering board generation and time formatting utilities.
+- 🔧 Introduced ESLint, Prettier, Husky, and lint-staged for consistent code quality.
+- ⚙️ Added Vite static asset pipeline and local asset staging directory.
+- 📝 Refreshed README and CONTRIBUTING guides to document the new workflows.
+
+### Changed
+
+- 🎮 Rebuilt gameplay scene using typed card state, improved animations, and local audio helper.
+- 🗂️ Replaced legacy CDN asset loading with runtime-generated textures and configurable asset copy step.
+- 🔄 Updated package scripts to run development, build, lint, format, and test tasks.
+
 ## [1.0.0] - 2025-08-01
 
 ### Added
+
 - 🎮 Initial release of Emoji Match Game
 - ✨ Complete project restructuring and organization
 - 📁 Organized folder structure with src/, assets/, docs/ directories
@@ -26,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 🚫 Gitignore file for clean version control
 
 ### Project Structure
+
 ```
 emojigame/
 ├── src/
@@ -45,6 +64,7 @@ emojigame/
 ```
 
 ### Technical Features
+
 - 🎯 Phaser.js 3.70.0 integration
 - 📦 ES6 modules for clean code organization
 - 🔄 CDN-based asset loading
@@ -54,6 +74,7 @@ emojigame/
 - 🔧 Development tools and build scripts
 
 ### Game Features
+
 - 🧩 16 emoji cards with 8 unique pairs
 - ⏱️ 60-second time limit
 - 💯 Score system with match bonuses
@@ -64,6 +85,7 @@ emojigame/
 - 🎮 Intuitive click/touch controls
 
 ### Documentation
+
 - 📖 Complete README with setup instructions
 - 🛠️ Development guide with architecture overview
 - 🤝 Contributing guidelines for open source collaboration
@@ -75,6 +97,7 @@ emojigame/
 ## Previous Versions
 
 ### [0.1.0] - Initial Code
+
 - Basic Phaser.js game implementation
 - Unstructured file organization
 - Core emoji matching gameplay

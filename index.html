@@ -1,57 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emoji Match Game</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
-    <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            font-family: Arial, sans-serif;
-        }
-        
-        #game-container {
-            text-align: center;
-        }
-        
-        #phaser-example {
-            border: 3px solid #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-        }
-        
-        h1 {
-            color: white;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-        
-        .instructions {
-            color: white;
-            margin-top: 20px;
-            max-width: 800px;
-        }
-    </style>
-</head>
-<body>
-    <div id="game-container">
-        <h1>🎮 Emoji Match Game</h1>
-        <div id="phaser-example"></div>
-        <div class="instructions">
-            <p>🎯 Match the emoji pairs to score points!</p>
-            <p>⏰ Beat the clock and get the highest score!</p>
-        </div>
-    </div>
-    
-    <!-- Load Phaser first, then our game -->
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
-    <script type="module" src="src/main.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <title>Emoji Match</title>
+  </head>
+  <body>
+    <div id="game-root" role="application" aria-label="Emoji Match Game"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>
