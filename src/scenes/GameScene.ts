@@ -98,9 +98,9 @@ class GameScene extends Phaser.Scene {
     sprite.cardId = card.id;
     sprite.faceTextureKey = card.textureKey;
     sprite.faceFrame = card.frame;
+    sprite.matchId = card.matchId;
     sprite.isFaceUp = false;
     sprite.isMatched = false;
-    sprite.matchId = card.matchId;
     sprite.setScale(0);
 
     sprite.setInteractive({ useHandCursor: true });
@@ -205,6 +205,7 @@ class GameScene extends Phaser.Scene {
   private flipCard(card: CardSprite, faceUp: boolean): void {
     const targetTexture = faceUp ? card.faceTextureKey : 'card-back';
     const targetFrame = faceUp ? card.faceFrame : undefined;
+
     this.tweens.add({
       targets: card,
       scaleX: 0,

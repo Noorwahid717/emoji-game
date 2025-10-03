@@ -26,7 +26,6 @@ export class Hud extends Phaser.GameObjects.Container {
   private audioMuted: boolean;
 
   private readonly onToggleAudio: (muted: boolean) => void;
-
   constructor(scene: Phaser.Scene, options: HudOptions) {
     super(scene, 0, 0);
     scene.add.existing(this);
