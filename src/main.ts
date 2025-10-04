@@ -6,6 +6,7 @@ import PreloaderScene from './scenes/PreloaderScene';
 import MenuScene from './scenes/MenuScene';
 import GameScene from './scenes/GameScene';
 import GameOverScene from './scenes/GameOverScene';
+import './styles/global.css';
 
 const config: Phaser.Types.Core.GameConfig = {
   ...GameConfig.phaser,
