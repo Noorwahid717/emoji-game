@@ -11,6 +11,8 @@ class PreloaderScene extends Phaser.Scene {
 
   private progressText?: Phaser.GameObjects.Text;
 
+  private progressDimensions?: { width: number; height: number; radius: number };
+
   private loadComplete?: Promise<void>;
 
   constructor() {
@@ -26,14 +28,23 @@ class PreloaderScene extends Phaser.Scene {
       const finalize = async () => {
         this.load.off(Phaser.Loader.Events.PROGRESS, this.handleProgress, this);
 
-        createGeneratedAssets(this);
-        await this.prepareAudio();
+        try {
+          createGeneratedAssets(this);
 
-        this.progressBar?.destroy();
-        this.progressBox?.destroy();
-        this.progressText?.destroy();
+          try {
+            await this.prepareAudio();
+          } catch (error) {
+            console.warn('Audio preparation failed, continuing without sound resume.', error);
+          }
+        } catch (error) {
+          console.error('Unexpected error while finalizing preload assets.', error);
+        } finally {
+          this.progressBar?.destroy();
+          this.progressBox?.destroy();
+          this.progressText?.destroy();
 
-        resolve();
+          resolve();
+        }
       };
 
       if (this.load.totalToLoad === 0) {
@@ -55,29 +66,46 @@ class PreloaderScene extends Phaser.Scene {
 
   private createProgressUi(): void {
     const { width, height } = this.scale;
+    const boxWidth = Math.min(width * 0.7, 440);
+    const boxHeight = Math.max(48, Math.min(height * 0.14, 64));
+    const radius = Math.min(20, boxHeight / 2 - 2);
+    const left = width / 2 - boxWidth / 2;
+    const top = height / 2 - boxHeight / 2;
+
+    this.progressDimensions = { width: boxWidth, height: boxHeight, radius };
+
     this.progressBox = this.add.graphics();
     this.progressBox.fillStyle(0x0f172a, 0.65);
-    this.progressBox.fillRoundedRect(width / 2 - 220, height / 2 - 30, 440, 60, 18);
+    this.progressBox.fillRoundedRect(left, top, boxWidth, boxHeight, radius);
 
     this.progressBar = this.add.graphics();
     this.progressText = this.add
-      .text(width / 2, height / 2 + 48, t('preloader.loading'), {
+      .text(width / 2, top + boxHeight + 18, t('preloader.loading'), {
         fontFamily: '"Segoe UI", Arial, sans-serif',
-        fontSize: '24px',
+        fontSize: boxHeight < 56 ? '18px' : '24px',
         color: '#f8fafc',
       })
       .setOrigin(0.5);
   }
 
   private handleProgress(value: number): void {
-    if (!this.progressBar || !this.progressBox || !this.progressText) {
+    if (!this.progressBar || !this.progressBox || !this.progressText || !this.progressDimensions) {
       return;
     }
 
     const { width, height } = this.scale;
+    const { width: boxWidth, height: boxHeight, radius } = this.progressDimensions;
+    const left = width / 2 - boxWidth / 2;
+    const top = height / 2 - boxHeight / 2;
     this.progressBar.clear();
     this.progressBar.fillStyle(0x38bdf8, 1);
-    this.progressBar.fillRoundedRect(width / 2 - 210, height / 2 - 22, 420 * value, 44, 14);
+    this.progressBar.fillRoundedRect(
+      left + 6,
+      top + 6,
+      (boxWidth - 12) * value,
+      boxHeight - 12,
+      radius - 4,
+    );
 
     const total = this.load.totalToLoad;
     const complete = this.load.totalComplete;
