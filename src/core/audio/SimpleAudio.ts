@@ -27,6 +27,23 @@ export class SimpleAudio {
     try {
       this.audioContext = new AudioContextClass();
       this.initialized = true;
+
+      // Auto-resume on first user interaction
+      if (this.audioContext.state === 'suspended') {
+        const resumeOnInteraction = () => {
+          this.resume().catch(() => {
+            // Silently ignore resume errors
+          });
+          document.removeEventListener('click', resumeOnInteraction);
+          document.removeEventListener('touchstart', resumeOnInteraction);
+          document.removeEventListener('keydown', resumeOnInteraction);
+        };
+
+        document.addEventListener('click', resumeOnInteraction);
+        document.addEventListener('touchstart', resumeOnInteraction);
+        document.addEventListener('keydown', resumeOnInteraction);
+      }
+
       return true;
     } catch (error) {
       console.warn('Unable to start audio context', error);

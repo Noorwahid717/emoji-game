@@ -116,11 +116,6 @@ const validateConfig = (config: EmojiGameConfig): EmojiGameConfig => {
   return config;
 };
 
-const resolution =
-  typeof window !== 'undefined' && window.devicePixelRatio
-    ? Math.min(window.devicePixelRatio, 2)
-    : 1;
-
 const baseConfig: EmojiGameConfig = {
   phaser: {
     type: Phaser.AUTO,
@@ -137,7 +132,6 @@ const baseConfig: EmojiGameConfig = {
       pixelArt: false,
       antialias: true,
     },
-    resolution,
     fps: {
       target: 60,
       min: 30,
@@ -243,7 +237,7 @@ const baseConfig: EmojiGameConfig = {
       cardSpacing: 18,
     },
     assets: {
-      emojiCount: 18,
+      emojiCount: 16,
     },
   },
 };
