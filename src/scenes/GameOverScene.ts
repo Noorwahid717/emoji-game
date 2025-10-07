@@ -41,18 +41,20 @@ class GameOverScene extends Phaser.Scene {
 
     this.add.image(this.scale.width / 2, this.scale.height / 2, 'background').setAlpha(0.6);
 
-    const panel = this.add.rectangle(400, 300, 520, 360, 0x0f172a, 0.94);
+    const panel = this.add.rectangle(400, 300, 540, 360, 0x0f172a, 0.9);
     panel.setStrokeStyle(4, payload.won ? 0x22c55e : 0xf97316, 0.9);
 
     const title = payload.won ? t('gameover.win') : t('gameover.lose');
     this.add
       .text(400, 200, title, {
-        fontFamily: '"Segoe UI", Arial, sans-serif',
-        fontSize: '32px',
-        color: '#ffffff',
+        fontFamily: '"Poppins", "Segoe UI", sans-serif',
+        fontSize: '34px',
+        fontStyle: '700',
+        color: '#f8fafc',
         align: 'center',
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setShadow(0, 6, 'rgba(15, 23, 42, 0.6)', 14, false, true);
 
     const modeLabel = t(GameConfig.game.modes[payload.mode].labelKey);
     const stats = [
@@ -76,19 +78,22 @@ class GameOverScene extends Phaser.Scene {
 
     this.add
       .text(400, 280, stats.join('\n'), {
-        fontFamily: '"Segoe UI", Arial, sans-serif',
-        fontSize: '24px',
+        fontFamily: '"Poppins", "Segoe UI", sans-serif',
+        fontSize: '22px',
+        fontStyle: '500',
         color: '#e2e8f0',
         align: 'center',
-        lineSpacing: 12,
+        lineSpacing: 10,
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setShadow(0, 4, 'rgba(15, 23, 42, 0.55)', 12, false, true);
 
     new PrimaryButton(this, 400, 380, {
       label: t('gameover.playAgain'),
       onClick: () => {
         this.scene.start('Game', { mode: payload.mode, dailySeed: payload.dailySeed });
       },
+      variant: 'primary',
     });
 
     new PrimaryButton(this, 400, 460, {
@@ -96,6 +101,7 @@ class GameOverScene extends Phaser.Scene {
       onClick: () => {
         this.scene.start('Menu');
       },
+      variant: 'secondary',
     });
   }
 }
