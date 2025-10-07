@@ -35,77 +35,52 @@ interface PowerUpButton {
 
 export class Hud extends Phaser.GameObjects.Container {
   private readonly scoreText: Phaser.GameObjects.Text;
-
   private readonly timerText: Phaser.GameObjects.Text;
-
   private readonly highScoreText: Phaser.GameObjects.Text;
-
   private readonly levelText: Phaser.GameObjects.Text;
-
   private readonly streakText: Phaser.GameObjects.Text;
-
   private readonly movesText: Phaser.GameObjects.Text;
-
   private readonly modeText: Phaser.GameObjects.Text;
-
   private readonly statusText: Phaser.GameObjects.Text;
 
   private readonly audioButton: Phaser.GameObjects.Container;
-
   private readonly audioIcon: Phaser.GameObjects.Text;
 
   private readonly colorButton: Phaser.GameObjects.Container;
-
   private readonly colorIcon: Phaser.GameObjects.Text;
 
   private readonly powerUpButtons: Record<PowerUpType, PowerUpButton>;
 
   private readonly audioEnabled: boolean;
-
   private audioMuted: boolean;
-
   private colorBlindMode: boolean;
 
   private readonly onToggleAudio: (muted: boolean) => void;
-
   private readonly onToggleColorBlind: (enabled: boolean) => void;
-
   private readonly powerUpCallbacks: PowerUpCallbacks;
 
   private localeDisposer?: () => void;
 
   private currentScore = 0;
-
   private currentHighScore: number;
-
   private currentTime = 0;
-
   private currentLevel = 1;
-
   private currentStreak = 0;
-
   private currentMoves = 0;
-
   private currentMultiplier = 1;
 
   private readonly timerEnabled: boolean;
-
   private readonly timerWarning: number;
-
   private readonly modeLabelKey: string;
 
   private readonly tooltipContainer: Phaser.GameObjects.Container;
-
   private readonly tooltipBackground: Phaser.GameObjects.Rectangle;
-
   private readonly tooltipText: Phaser.GameObjects.Text;
-
   private tooltipTween?: Phaser.Tweens.Tween;
 
+  // Power rail layout (from codex branch)
   private readonly powerRailX: number;
-
   private readonly powerRailSpacing: number;
-
   private readonly powerRailBaseY: number;
 
   constructor(scene: Phaser.Scene, options: HudOptions) {
@@ -225,6 +200,7 @@ export class Hud extends Phaser.GameObjects.Container {
     this.onToggleAudio = options.onToggleAudio;
     this.onToggleColorBlind = options.onToggleColorBlind;
 
+    // Power rail (sidebar) from codex branch
     const railWidth = sidebarEnabled ? 164 : 150;
     const railHeight = Math.min(scene.scale.height - 140, sidebarEnabled ? 480 : 440);
     const railX = scene.scale.width - (sidebarEnabled ? 96 : 82);
@@ -252,6 +228,7 @@ export class Hud extends Phaser.GameObjects.Container {
     const toggleWidth = sidebarEnabled ? 94 : 88;
     const toggleHeight = sidebarEnabled ? 78 : 74;
 
+    // Audio toggle
     this.audioButton = scene.add.container(this.powerRailX, firstSlotY).setDepth(6);
     const audioBackground = scene.add.rectangle(0, 0, toggleWidth, toggleHeight, 0x0f172a, 0.72);
     audioBackground.setStrokeStyle(2, 0x38bdf8, 0.82);
@@ -288,7 +265,6 @@ export class Hud extends Phaser.GameObjects.Container {
       })
       .setOrigin(0.5);
     this.audioIcon.setShadow(0, 3, 'rgba(15, 23, 42, 0.5)', 8, false, true);
-
     this.audioButton.add([audioBackground, this.audioIcon]);
     this.audioButton.setSize(toggleWidth, toggleHeight);
     this.attachTooltip(
@@ -301,6 +277,7 @@ export class Hud extends Phaser.GameObjects.Container {
       { x: -96, y: 0 },
     );
 
+    // Color blind toggle
     this.colorButton = scene.add.container(this.powerRailX, secondSlotY).setDepth(6);
     const colorBackground = scene.add.rectangle(0, 0, toggleWidth, toggleHeight, 0x0f172a, 0.72);
     colorBackground.setStrokeStyle(2, 0x10b981, 0.82);
@@ -348,6 +325,7 @@ export class Hud extends Phaser.GameObjects.Container {
       { x: -96, y: 0 },
     );
 
+    // Power-ups
     this.powerUpButtons = {
       hint: this.createPowerUpButton('hint', '💡', 'hud.powerups.hint', options.powerUps.hint, 0),
       freeze: this.createPowerUpButton(
@@ -437,9 +415,8 @@ export class Hud extends Phaser.GameObjects.Container {
 
   public updatePowerUpCount(type: PowerUpType, remaining: number): void {
     const button = this.powerUpButtons[type];
-    if (!button) {
-      return;
-    }
+    if (!button) return;
+
     button.remaining = remaining;
     button.count.setText(`x${remaining}`);
     const disabled = (button.container.getData('disabled') as boolean) ?? false;
@@ -452,9 +429,8 @@ export class Hud extends Phaser.GameObjects.Container {
 
   public setPowerUpDisabled(type: PowerUpType, disabled: boolean): void {
     const button = this.powerUpButtons[type];
-    if (!button) {
-      return;
-    }
+    if (!button) return;
+
     button.container.setData('disabled', disabled);
     const alpha = disabled ? 0.4 : button.remaining > 0 ? 1 : 0.35;
     button.container.setAlpha(alpha);
@@ -478,9 +454,8 @@ export class Hud extends Phaser.GameObjects.Container {
 
   private handlePowerUp(type: PowerUpType): void {
     const button = this.powerUpButtons[type];
-    if (!button || button.remaining <= 0 || button.container.getData('disabled')) {
-      return;
-    }
+    if (!button || button.remaining <= 0 || button.container.getData('disabled')) return;
+
     button.remaining -= 1;
     this.scene.tweens.add({
       targets: button.container,
@@ -583,9 +558,7 @@ export class Hud extends Phaser.GameObjects.Container {
     const offsetY = offset.y ?? -58;
     target.on('pointerover', () => {
       const label = getLabel();
-      if (!label) {
-        return;
-      }
+      if (!label) return;
       this.showTooltip(anchor.x + offsetX, anchor.y + offsetY, label);
     });
     target.on('pointerout', () => {
@@ -597,9 +570,8 @@ export class Hud extends Phaser.GameObjects.Container {
   }
 
   private showTooltip(x: number, y: number, text: string): void {
-    if (!text.trim()) {
-      return;
-    }
+    if (!text.trim()) return;
+
     this.tooltipText.setText(text);
     const targetWidth = Math.max(160, this.tooltipText.width + 32);
     this.tooltipBackground.setDisplaySize(targetWidth, 44);
@@ -619,9 +591,8 @@ export class Hud extends Phaser.GameObjects.Container {
   }
 
   private hideTooltip(): void {
-    if (!this.tooltipContainer.visible) {
-      return;
-    }
+    if (!this.tooltipContainer.visible) return;
+
     this.tooltipTween?.stop();
     this.tooltipTween = this.scene.tweens.add({
       targets: this.tooltipContainer,
@@ -635,9 +606,7 @@ export class Hud extends Phaser.GameObjects.Container {
   }
 
   private toggleAudio(): void {
-    if (!this.audioEnabled) {
-      return;
-    }
+    if (!this.audioEnabled) return;
 
     this.audioMuted = !this.audioMuted;
     this.updateAudioIcon();
