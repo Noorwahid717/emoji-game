@@ -1,4 +1,5 @@
-import { getEmojiFrameKey } from './emojiCatalog';
+﻿import { EMOJI_COUNT, getEmojiByIndex } from '../../data/emojis';
+import { shuffle } from '../../utils/shuffle';
 
 type RandomGenerator = () => number;
 
@@ -7,6 +8,9 @@ export interface CardDefinition {
   readonly matchId: number;
   readonly textureKey: string;
   readonly frame: string;
+  readonly emojiId: string;
+  readonly char: string;
+  readonly label: string;
 }
 
 export class BoardGenerator {
@@ -16,50 +20,52 @@ export class BoardGenerator {
     this.random = random;
   }
 
-  public generatePairs(pairCount: number, emojiPoolSize: number): CardDefinition[] {
+  public generatePairs(pairCount: number, emojiPoolSize: number = EMOJI_COUNT): CardDefinition[] {
     if (pairCount <= 0) {
       throw new Error('pairCount must be a positive number.');
     }
 
-    if (emojiPoolSize < pairCount) {
-      throw new Error('emojiPoolSize must be greater than or equal to pairCount.');
+    const poolLimit = Math.min(emojiPoolSize, EMOJI_COUNT);
+    if (poolLimit < pairCount) {
+      throw new Error(
+        `emojiPoolSize must be greater than or equal to pairCount (requested ${pairCount}, available ${poolLimit}).`,
+      );
     }
 
-    const selections = this.pickUniqueIndexes(pairCount, emojiPoolSize);
-    const cards: CardDefinition[] = selections
-      .flatMap((index) => {
-        const frame = getEmojiFrameKey(index);
-        const matchId = index;
+    const emojiIndexes = shuffle(
+      Array.from({ length: poolLimit }, (_, index) => index),
+      () => this.random(),
+    ).slice(0, pairCount);
+
+    const cards: CardDefinition[] = emojiIndexes
+      .flatMap((emojiIndex) => {
+        const emoji = getEmojiByIndex(emojiIndex);
+        const frameKey = `emoji-${emojiIndex}`;
+        const matchId = emojiIndex;
         return [
-          { id: index * 2, matchId, textureKey: 'emoji-atlas', frame },
-          { id: index * 2 + 1, matchId, textureKey: 'emoji-atlas', frame },
+          {
+            id: 0,
+            matchId,
+            textureKey: 'emoji-atlas',
+            frame: frameKey,
+            emojiId: emoji.id,
+            char: emoji.char,
+            label: emoji.label,
+          },
+          {
+            id: 0,
+            matchId,
+            textureKey: 'emoji-atlas',
+            frame: frameKey,
+            emojiId: emoji.id,
+            char: emoji.char,
+            label: emoji.label,
+          },
         ];
       })
-      .map((card, position) => ({ ...card, id: position }));
+      .map((card, index) => ({ ...card, id: index }));
 
-    return this.shuffle(cards);
-  }
-
-  private pickUniqueIndexes(pairCount: number, emojiPoolSize: number): number[] {
-    const pool = Array.from({ length: emojiPoolSize }, (_, index) => index);
-    const selection: number[] = [];
-
-    for (let i = 0; i < pairCount; i += 1) {
-      const randomIndex = Math.floor(this.random() * pool.length);
-      const [value] = pool.splice(randomIndex, 1);
-      selection.push(value);
-    }
-
-    return selection;
-  }
-
-  private shuffle<T>(items: readonly T[]): T[] {
-    const clone = [...items];
-    for (let i = clone.length - 1; i > 0; i -= 1) {
-      const j = Math.floor(this.random() * (i + 1));
-      [clone[i], clone[j]] = [clone[j], clone[i]];
-    }
-    return clone;
+    return shuffle(cards, () => this.random());
   }
 }
 

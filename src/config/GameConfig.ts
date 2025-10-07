@@ -1,6 +1,6 @@
-import Phaser from 'phaser';
+﻿import Phaser from 'phaser';
 
-import { EMOJI_CHARACTERS } from '../core/board/emojiCatalog';
+import { EMOJI_COUNT } from '../data/emojis';
 
 type GridSize = {
   columns: number;
@@ -98,9 +98,9 @@ const validateConfig = (config: EmojiGameConfig): EmojiGameConfig => {
     );
   }
 
-  if (assets.emojiCount > EMOJI_CHARACTERS.length) {
+  if (assets.emojiCount > EMOJI_COUNT) {
     throw new Error(
-      `Configured emojiCount (${assets.emojiCount}) exceeds available emoji assets (${EMOJI_CHARACTERS.length}).`,
+      `Configured emojiCount (${assets.emojiCount}) exceeds available emoji assets (${EMOJI_COUNT}).`,
     );
   }
 

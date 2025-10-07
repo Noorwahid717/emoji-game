@@ -1,8 +1,24 @@
-import Phaser from 'phaser';
+﻿import Phaser from 'phaser';
 
-import { createGeneratedAssets } from '../assets/createGeneratedAssets';
+import matchAudioUrl from '../assets/audio/match.wav?url';
+import mismatchAudioUrl from '../assets/audio/mismatch.wav?url';
+import successAudioUrl from '../assets/audio/success.wav?url';
+import countdownAudioUrl from '../assets/audio/countdown.wav?url';
+import backgroundUrl from '../assets/images/background.png?url';
+import cardBackUrl from '../assets/images/card-back.png?url';
+import cardFrontUrl from '../assets/images/card-front.png?url';
+import emojiAtlasImageUrl from '../assets/images/emoji-atlas.png?url';
+import emojiAtlasDataUrl from '../assets/images/emoji-atlas.json?url';
+import logoUrl from '../assets/images/logo.png?url';
 import simpleAudio from '../core/audio/SimpleAudio';
 import { t } from '../core/locale/Localization';
+
+const AUDIO_BINARY_KEYS = [
+  { cacheKey: 'audio-match', decodeKey: 'match', url: matchAudioUrl },
+  { cacheKey: 'audio-mismatch', decodeKey: 'mismatch', url: mismatchAudioUrl },
+  { cacheKey: 'audio-success', decodeKey: 'success', url: successAudioUrl },
+  { cacheKey: 'audio-countdown', decodeKey: 'countdown', url: countdownAudioUrl },
+] as const;
 
 class PreloaderScene extends Phaser.Scene {
   private progressBar?: Phaser.GameObjects.Graphics;
@@ -21,38 +37,33 @@ class PreloaderScene extends Phaser.Scene {
 
   public preload(): void {
     this.createProgressUi();
+    this.queueAssets();
 
     this.load.on(Phaser.Loader.Events.PROGRESS, this.handleProgress, this);
 
     this.loadComplete = new Promise((resolve) => {
       const finalize = async () => {
         this.load.off(Phaser.Loader.Events.PROGRESS, this.handleProgress, this);
-
         try {
-          createGeneratedAssets(this);
-
-          try {
-            await this.prepareAudio();
-          } catch (error) {
-            console.warn('Audio preparation failed, continuing without sound resume.', error);
-          }
+          await this.prepareAudioBuffers();
         } catch (error) {
-          console.error('Unexpected error while finalizing preload assets.', error);
+          console.warn('Audio buffers failed to prepare; continuing without decoded audio.', error);
         } finally {
           this.progressBar?.destroy();
           this.progressBox?.destroy();
           this.progressText?.destroy();
-
           resolve();
         }
       };
 
       if (this.load.totalToLoad === 0) {
-        finalize();
+        finalize().catch(() => undefined);
         return;
       }
 
-      this.load.once(Phaser.Loader.Events.COMPLETE, finalize);
+      this.load.once(Phaser.Loader.Events.COMPLETE, () => {
+        finalize().catch(() => undefined);
+      });
     });
   }
 
@@ -61,6 +72,18 @@ class PreloaderScene extends Phaser.Scene {
       this.time.delayedCall(150, () => {
         this.scene.start('Menu');
       });
+    });
+  }
+
+  private queueAssets(): void {
+    this.load.setCORS('anonymous');
+    this.load.image('background', backgroundUrl);
+    this.load.image('card-back', cardBackUrl);
+    this.load.image('card-front', cardFrontUrl);
+    this.load.image('logo', logoUrl);
+    this.load.atlas('emoji-atlas', emojiAtlasImageUrl, emojiAtlasDataUrl);
+    AUDIO_BINARY_KEYS.forEach(({ cacheKey, url }) => {
+      this.load.binary(cacheKey, url);
     });
   }
 
@@ -113,13 +136,30 @@ class PreloaderScene extends Phaser.Scene {
     this.progressText.setText(t('preloader.loadingProgress', { percent, complete, total }));
   }
 
-  private async prepareAudio(): Promise<void> {
+  private async prepareAudioBuffers(): Promise<void> {
     const hasAudio = (this.registry.get('hasAudio') as boolean) ?? false;
     if (!hasAudio) {
+      AUDIO_BINARY_KEYS.forEach(({ cacheKey }) => {
+        this.cache.binary.remove(cacheKey);
+      });
       return;
     }
 
-    await simpleAudio.resume();
+    const muted = (this.registry.get('audioMuted') as boolean) ?? false;
+    const decodePromises = AUDIO_BINARY_KEYS.map(async ({ cacheKey, decodeKey }) => {
+      const buffer = this.cache.binary.get(cacheKey);
+      if (buffer instanceof ArrayBuffer) {
+        await simpleAudio.decode(decodeKey, buffer);
+      }
+      this.cache.binary.remove(cacheKey);
+    });
+
+    await Promise.all(decodePromises);
+
+    simpleAudio.setMuted(muted);
+    if (!muted) {
+      await simpleAudio.resume();
+    }
   }
 }
 

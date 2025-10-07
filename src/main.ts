@@ -1,3 +1,7 @@
+﻿// MIT License
+// Copyright (c) 2025 - Emoji Match contributors
+// See the LICENSE file in the project root for license information.
+
 import Phaser from 'phaser';
 
 import { GameConfig } from './config/GameConfig';

@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+﻿import Phaser from 'phaser';
 
 import {
   GameConfig,
@@ -19,6 +19,10 @@ import {
   persistColorBlindPreference,
 } from '../core/storage/preferencesStorage';
 import Hud from '../ui/Hud';
+import FlipStateMachine from '../utils/stateMachine';
+import { shuffle } from '../utils/shuffle';
+import { isMatchingPair } from '../utils/cards';
+import { applyMismatchPenalty, calculateMatchScore } from '../utils/scoring';
 
 const COLOR_SCHEMES = {
   standard: {
@@ -80,7 +84,15 @@ class GameScene extends Phaser.Scene {
 
   private slotPositions: SlotPosition[] = [];
 
-  private selectedCards: CardSprite[] = [];
+  private flipState: FlipStateMachine = new FlipStateMachine();
+
+  private firstSelection?: CardSprite;
+
+  private secondSelection?: CardSprite;
+
+  private isInputLocked = false;
+
+  private audioUnlockRegistered = false;
 
   private powerUps: Record<PowerUpType, number> = { hint: 0, freeze: 0, shuffle: 0 };
 
@@ -220,7 +232,11 @@ class GameScene extends Phaser.Scene {
     this.perfectBoard = true;
     this.matches = 0;
     this.streak = 0;
-    this.selectedCards = [];
+    this.firstSelection = undefined;
+    this.secondSelection = undefined;
+    this.flipState.reset();
+    this.resolving = false;
+    this.isInputLocked = false;
     this.countdownTriggered = false;
     this.moves = 0;
 
@@ -237,9 +253,11 @@ class GameScene extends Phaser.Scene {
       this.levelTimeBonus = 0;
       this.hud.updateMoves(this.moves);
       this.stopTimer();
+      this.tweens.killAll();
     }
 
     this.createBoard(levelDefinition);
+    this.setInputLocked(false);
 
     const focusableIndex = this.findNextFocusableIndex(0, 1) ?? 0;
     this.updateKeyboardFocus(focusableIndex);
@@ -248,6 +266,7 @@ class GameScene extends Phaser.Scene {
 
   private currentCleanup(): void {
     this.stopTimer();
+    this.tweens.killAll();
     this.cards.forEach((card) => {
       card.focusRing.destroy();
       card.destroy();
@@ -352,6 +371,9 @@ class GameScene extends Phaser.Scene {
     sprite.cardIndex = index;
     sprite.setScale(0);
     sprite.setDisplaySize(cellWidth - 10, cellHeight - 10);
+    sprite.setData('emojiId', card.emojiId);
+    sprite.setData('emojiChar', card.char);
+    sprite.setData('ariaLabel', card.label);
 
     const focusRing = this.add.rectangle(
       position.x,
@@ -367,20 +389,38 @@ class GameScene extends Phaser.Scene {
     focusRing.setDepth(sprite.depth + 1);
     sprite.focusRing = focusRing;
 
-    sprite.setInteractive({ useHandCursor: true });
+    this.refreshCardInteractivity(sprite);
+
     sprite.on('pointerup', () => {
       this.updateFocusForCard(sprite);
       this.handleCardSelected(sprite);
     });
     sprite.on('pointerover', () => {
-      this.updateFocusForCard(sprite);
+      if (!this.isInputLocked) {
+        this.updateFocusForCard(sprite);
+      }
     });
 
     return sprite;
   }
 
+  private refreshCardInteractivity(card: CardSprite): void {
+    const padding = this.scale.width <= 480 ? 28 : 14;
+    const hitArea = new Phaser.Geom.Rectangle(
+      -padding,
+      -padding,
+      card.displayWidth + padding * 2,
+      card.displayHeight + padding * 2,
+    );
+    card.setInteractive({
+      hitArea,
+      hitAreaCallback: Phaser.Geom.Rectangle.Contains,
+      useHandCursor: true,
+    });
+  }
+
   private handleCardSelected(card: CardSprite): void {
-    if (this.gameEnded || this.resolving) {
+    if (this.gameEnded || this.resolving || this.isInputLocked) {
       return;
     }
 
@@ -388,37 +428,78 @@ class GameScene extends Phaser.Scene {
       return;
     }
 
-    if (this.selectedCards.length === 2) {
+    const state = this.flipState.state;
+
+    if (state === 'IDLE') {
+      this.flipState.transition('FIRST_FLIP');
+      this.firstSelection = card;
+      this.flipCard(card, true);
       return;
     }
 
-    this.flipCard(card, true);
-    this.selectedCards.push(card);
-
-    if (this.selectedCards.length === 2) {
-      this.resolving = true;
+    if (state === 'FIRST_FLIP') {
+      if (this.firstSelection === card) {
+        return;
+      }
+      this.flipState.transition('SECOND_FLIP');
+      this.secondSelection = card;
+      this.flipCard(card, true);
       this.moves += 1;
       if (!this.modeConfig.timer.enabled) {
         this.hud.updateMoves(this.moves);
       }
-      this.time.delayedCall(340, () => this.evaluateSelection());
+      this.beginSelectionCheck();
     }
   }
 
+  private beginSelectionCheck(): void {
+    this.resolving = true;
+    this.flipState.transition('CHECKING');
+    this.setInputLocked(true);
+    this.time.delayedCall(340, () => this.evaluateSelection());
+  }
+
   private evaluateSelection(): void {
-    if (this.selectedCards.length < 2) {
-      this.resolving = false;
+    const first = this.firstSelection;
+    const second = this.secondSelection;
+
+    this.firstSelection = undefined;
+    this.secondSelection = undefined;
+
+    if (!first || !second) {
+      this.finishSelectionCycle();
       return;
     }
 
-    const [first, second] = this.selectedCards;
-    this.selectedCards = [];
-
-    if (first.matchId === second.matchId) {
+    if (isMatchingPair(first, second)) {
       this.handleMatch(first, second);
-      this.resolving = false;
     } else {
       this.handleMismatch(first, second);
+    }
+  }
+
+  private finishSelectionCycle(): void {
+    this.resolving = false;
+    this.flipState.reset();
+    this.resolving = false;
+    this.isInputLocked = false;
+    if (!this.gameEnded) {
+      this.setInputLocked(false);
+    }
+  }
+
+  private setInputLocked(locked: boolean): void {
+    this.isInputLocked = locked;
+    this.input.enabled = !locked;
+
+    if (locked) {
+      this.cards.forEach((card) => card.disableInteractive());
+    } else {
+      this.cards.forEach((card) => {
+        if (!card.isMatched) {
+          this.refreshCardInteractivity(card);
+        }
+      });
     }
   }
 
@@ -428,8 +509,14 @@ class GameScene extends Phaser.Scene {
 
     this.streak += 1;
     this.bestStreak = Math.max(this.bestStreak, this.streak);
-    const multiplier = 1 + (this.streak - 1) * this.modeConfig.scoring.streakMultiplierStep;
-    const points = Math.round(this.modeConfig.scoring.matchPoints * multiplier);
+
+    const multiplier =
+      1 + Math.max(0, this.streak - 1) * this.modeConfig.scoring.streakMultiplierStep;
+    const points = calculateMatchScore(
+      this.modeConfig.scoring.matchPoints,
+      this.streak,
+      this.modeConfig.scoring.streakMultiplierStep,
+    );
     this.score += points;
     this.matches += 1;
     this.hud.updateScore(this.score);
@@ -460,6 +547,8 @@ class GameScene extends Phaser.Scene {
       simpleAudio.playMatch().catch(() => undefined);
     }
 
+    const levelCleared = this.matches === this.totalPairs;
+
     this.tweens.add({
       targets: [first, second],
       scale: 1.12,
@@ -472,20 +561,22 @@ class GameScene extends Phaser.Scene {
         sprite.focusRing.setPosition(sprite.x, sprite.y);
         sprite.focusRing.setScale(sprite.scaleX, sprite.scaleY);
       },
+      onComplete: () => {
+        if (levelCleared) {
+          this.finishSelectionCycle();
+          this.handleLevelComplete();
+        } else {
+          this.finishSelectionCycle();
+          const nextIndex = this.findNextFocusableIndex(this.keyboardIndex, 1);
+          if (typeof nextIndex === 'number') {
+            this.updateKeyboardFocus(nextIndex);
+          }
+        }
+      },
     });
-
-    if (this.matches === this.totalPairs) {
-      this.handleLevelComplete();
-    } else {
-      const nextIndex = this.findNextFocusableIndex(this.keyboardIndex, 1);
-      if (typeof nextIndex === 'number') {
-        this.updateKeyboardFocus(nextIndex);
-      }
-    }
   }
-
   private handleMismatch(first: CardSprite, second: CardSprite): void {
-    this.score = Math.max(0, this.score - this.modeConfig.scoring.mismatchPenalty);
+    this.score = applyMismatchPenalty(this.score, this.modeConfig.scoring.mismatchPenalty);
     this.hud.updateScore(this.score);
     this.streak = 0;
     this.hud.updateStreak(this.streak, 1);
@@ -522,14 +613,14 @@ class GameScene extends Phaser.Scene {
         second.clearTint();
         this.flipCard(first, false);
         this.flipCard(second, false);
-        this.resolving = false;
+        this.finishSelectionCycle();
       },
     });
   }
-
   private handleLevelComplete(): void {
     this.totalLevelsCompleted += 1;
     this.stopTimer();
+    this.tweens.killAll();
     this.streak = 0;
     this.hud.updateStreak(this.streak, 1);
 
@@ -600,6 +691,7 @@ class GameScene extends Phaser.Scene {
 
   private startTimer(): void {
     this.stopTimer();
+    this.tweens.killAll();
     if (!this.modeConfig.timer.enabled) {
       return;
     }
@@ -641,7 +733,9 @@ class GameScene extends Phaser.Scene {
       return;
     }
     this.gameEnded = true;
+    this.setInputLocked(true);
     this.stopTimer();
+    this.tweens.killAll();
 
     const highScores = (this.registry.get('highscores') as Record<GameMode, number>) ?? {
       ...DEFAULT_HIGH_SCORES,
@@ -685,6 +779,28 @@ class GameScene extends Phaser.Scene {
     const hasAudio = (this.registry.get('hasAudio') as boolean) ?? false;
     const muted = (this.registry.get('audioMuted') as boolean) ?? false;
     return hasAudio && !muted;
+  }
+
+  private installAudioUnlock(): void {
+    if (this.audioUnlockRegistered || !this.input) {
+      return;
+    }
+
+    if (!this.sound || !this.sound.locked) {
+      return;
+    }
+
+    this.audioUnlockRegistered = true;
+
+    const unlock = () => {
+      if (this.sound.locked) {
+        this.sound.unlock();
+      }
+      simpleAudio.resume().catch(() => undefined);
+    };
+
+    this.input.once('pointerdown', unlock, this);
+    this.input.keyboard?.once('keydown', unlock, this);
   }
 
   private getColorScheme(): ColorScheme {
@@ -820,7 +936,7 @@ class GameScene extends Phaser.Scene {
   }
 
   private handleHintPowerUp(): void {
-    if (this.gameEnded || this.resolving || this.powerUps.hint <= 0) {
+    if (this.gameEnded || this.resolving || this.isInputLocked || this.powerUps.hint <= 0) {
       return;
     }
 
@@ -837,6 +953,7 @@ class GameScene extends Phaser.Scene {
     this.hud.updatePowerUpCount('hint', this.powerUps.hint);
 
     this.resolving = true;
+    this.setInputLocked(true);
     this.hintsUsedThisLevel += 1;
     this.hud.showStatus(t('hud.status.hint'), '#fef08a');
 
@@ -855,15 +972,17 @@ class GameScene extends Phaser.Scene {
           this.flipCard(card, false);
         }
         if (!card.isMatched) {
-          card.setInteractive({ useHandCursor: true });
+          this.refreshCardInteractivity(card);
         }
       });
       this.resolving = false;
+      if (!this.gameEnded) {
+        this.setInputLocked(false);
+      }
     });
   }
-
   private handleFreezePowerUp(): void {
-    if (this.powerUps.freeze <= 0) {
+    if (this.gameEnded || this.resolving || this.isInputLocked || this.powerUps.freeze <= 0) {
       return;
     }
 
@@ -885,7 +1004,7 @@ class GameScene extends Phaser.Scene {
   }
 
   private handleShufflePowerUp(): void {
-    if (this.powerUps.shuffle <= 0) {
+    if (this.gameEnded || this.resolving || this.isInputLocked || this.powerUps.shuffle <= 0) {
       return;
     }
 
@@ -901,8 +1020,14 @@ class GameScene extends Phaser.Scene {
 
     this.hud.updatePowerUpCount('shuffle', this.powerUps.shuffle);
 
+    this.resolving = true;
+    this.setInputLocked(true);
+
+    const totalShuffles = unmatchedCards.length;
+    let completedTweens = 0;
+
     const slotIndexes = unmatchedCards.map((card) => card.cardIndex);
-    const shuffledSlots = Phaser.Utils.Array.Shuffle([...slotIndexes]);
+    const shuffledSlots = shuffle(slotIndexes);
 
     unmatchedCards.forEach((card, index) => {
       const slotIndex = shuffledSlots[index];
@@ -917,13 +1042,22 @@ class GameScene extends Phaser.Scene {
         onUpdate: () => {
           card.focusRing.setPosition(card.x, card.y);
         },
+        onComplete: () => {
+          card.focusRing.setPosition(card.x, card.y);
+          completedTweens += 1;
+          if (completedTweens === totalShuffles) {
+            this.resolving = false;
+            if (!this.gameEnded) {
+              this.setInputLocked(false);
+            }
+          }
+        },
       });
     });
 
     this.cards.sort((a, b) => a.cardIndex - b.cardIndex);
     this.hud.showStatus(t('hud.status.shuffle'), '#bfdbfe');
   }
-
   private findHintPair(): CardSprite[] | undefined {
     const unmatched = this.cards.filter((card) => !card.isMatched && !card.getData('hintPeek'));
     const grouped = new Map<number, CardSprite[]>();
@@ -949,7 +1083,6 @@ class GameScene extends Phaser.Scene {
     this.hud.updatePowerUpCount('freeze', this.powerUps.freeze);
     this.hud.updatePowerUpCount('shuffle', this.powerUps.shuffle);
   }
-
   private launchConfetti(): void {
     const colors = [0xfacc15, 0x38bdf8, 0x34d399, 0xf97316];
     for (let i = 0; i < 12; i += 1) {

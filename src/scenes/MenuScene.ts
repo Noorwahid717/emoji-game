@@ -1,19 +1,27 @@
-import Phaser from 'phaser';
+﻿import Phaser from 'phaser';
 
 import { GameConfig, type GameMode } from '../config/GameConfig';
 import { cycleLocale, getLocale, getLocaleName, t } from '../core/locale/Localization';
 import { getMissionStates } from '../core/missions/missions';
 import { loadHighScore } from '../core/storage/highScoreStorage';
 import { persistLocalePreference, persistModePreference } from '../core/storage/preferencesStorage';
+import simpleAudio from '../core/audio/SimpleAudio';
 import PrimaryButton from '../ui/PrimaryButton';
 
 class MenuScene extends Phaser.Scene {
+  private audioUnlockRegistered = false;
   constructor() {
     super('Menu');
   }
 
   public create(): void {
     this.add.image(400, 300, 'background');
+
+    this.installAudioUnlock();
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.audioUnlockRegistered = false;
+    });
 
     const logoImage = this.add.image(this.scale.width / 2, -160, 'logo');
     this.tweens.add({ targets: logoImage, y: 160, ease: 'Back.easeOut', duration: 900 });
@@ -83,7 +91,7 @@ class MenuScene extends Phaser.Scene {
       const line = this.add.text(
         this.scale.width / 2,
         missionHeader.y + 34 + index * 24,
-        `${t(mission.descriptionKey)} — ${status}`,
+        `${t(mission.descriptionKey)} â€” ${status}`,
         {
           fontFamily: '"Segoe UI", Arial, sans-serif',
           fontSize: '18px',
@@ -191,6 +199,28 @@ class MenuScene extends Phaser.Scene {
       modal.destroy();
       text.destroy();
     });
+  }
+
+  private installAudioUnlock(): void {
+    if (this.audioUnlockRegistered || !this.input) {
+      return;
+    }
+
+    if (!this.sound || !this.sound.locked) {
+      return;
+    }
+
+    this.audioUnlockRegistered = true;
+
+    const unlock = () => {
+      if (this.sound.locked) {
+        this.sound.unlock();
+      }
+      simpleAudio.resume().catch(() => undefined);
+    };
+
+    this.input.once('pointerdown', unlock, this);
+    this.input.keyboard?.once('keydown', unlock, this);
   }
 
   private changeLanguage(): void {

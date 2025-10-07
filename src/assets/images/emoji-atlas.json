@@ -1,0 +1,654 @@
+﻿{
+  "frames": {
+    "emoji-20": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 576,
+        "w": 192,
+        "h": 192,
+        "x": 384
+      }
+    },
+    "emoji-3": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 576
+      }
+    },
+    "emoji-18": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 576,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      }
+    },
+    "emoji-15": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 384,
+        "w": 192,
+        "h": 192,
+        "x": 576
+      }
+    },
+    "emoji-7": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 192,
+        "w": 192,
+        "h": 192,
+        "x": 192
+      }
+    },
+    "emoji-25": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 768,
+        "w": 192,
+        "h": 192,
+        "x": 192
+      }
+    },
+    "emoji-4": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 192,
+        "w": 192,
+        "h": 192,
+        "x": 768
+      }
+    },
+    "emoji-26": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 768,
+        "w": 192,
+        "h": 192,
+        "x": 384
+      }
+    },
+    "emoji-14": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 384,
+        "w": 192,
+        "h": 192,
+        "x": 384
+      }
+    },
+    "emoji-10": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 384,
+        "w": 192,
+        "h": 192,
+        "x": 768
+      }
+    },
+    "emoji-13": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 384,
+        "w": 192,
+        "h": 192,
+        "x": 192
+      }
+    },
+    "emoji-5": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 192,
+        "w": 192,
+        "h": 192,
+        "x": 960
+      }
+    },
+    "emoji-22": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 768,
+        "w": 192,
+        "h": 192,
+        "x": 768
+      }
+    },
+    "emoji-30": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 960,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      }
+    },
+    "emoji-11": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 384,
+        "w": 192,
+        "h": 192,
+        "x": 960
+      }
+    },
+    "emoji-8": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 192,
+        "w": 192,
+        "h": 192,
+        "x": 384
+      }
+    },
+    "emoji-6": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 192,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      }
+    },
+    "emoji-28": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 960,
+        "w": 192,
+        "h": 192,
+        "x": 768
+      }
+    },
+    "emoji-31": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 960,
+        "w": 192,
+        "h": 192,
+        "x": 192
+      }
+    },
+    "emoji-21": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 768,
+        "w": 192,
+        "h": 192,
+        "x": 576
+      }
+    },
+    "emoji-17": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 576,
+        "w": 192,
+        "h": 192,
+        "x": 960
+      }
+    },
+    "emoji-12": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 384,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      }
+    },
+    "emoji-2": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 384
+      }
+    },
+    "emoji-19": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 576,
+        "w": 192,
+        "h": 192,
+        "x": 192
+      }
+    },
+    "emoji-23": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 768,
+        "w": 192,
+        "h": 192,
+        "x": 960
+      }
+    },
+    "emoji-24": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 768,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      }
+    },
+    "emoji-1": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 192
+      }
+    },
+    "emoji-9": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 384,
+        "w": 192,
+        "h": 192,
+        "x": 576
+      }
+    },
+    "emoji-29": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 960,
+        "w": 192,
+        "h": 192,
+        "x": 960
+      }
+    },
+    "emoji-0": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      }
+    },
+    "emoji-27": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 768,
+        "w": 192,
+        "h": 192,
+        "x": 576
+      }
+    },
+    "emoji-16": {
+      "trimmed": false,
+      "spriteSourceSize": {
+        "y": 0,
+        "w": 192,
+        "h": 192,
+        "x": 0
+      },
+      "sourceSize": {
+        "h": 192,
+        "w": 192
+      },
+      "rotated": false,
+      "frame": {
+        "y": 576,
+        "w": 192,
+        "h": 192,
+        "x": 768
+      }
+    }
+  },
+  "meta": {
+    "app": "emoji-atlas-generator",
+    "scale": "1",
+    "version": "1.0",
+    "size": {
+      "h": 1152,
+      "w": 1152
+    },
+    "image": "emoji-atlas.png"
+  }
+}
