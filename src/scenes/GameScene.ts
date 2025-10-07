@@ -37,6 +37,8 @@ const COLOR_SCHEMES = {
   },
 } as const;
 
+const CARD_ROW_TINTS = [0xdbeafe, 0xc7d2fe, 0xfce7f3, 0xfef3c7] as const;
+
 type ColorScheme = (typeof COLOR_SCHEMES)[keyof typeof COLOR_SCHEMES];
 
 type PowerUpType = 'hint' | 'freeze' | 'shuffle';
@@ -60,6 +62,7 @@ type CardSprite = Phaser.GameObjects.Image & {
   matchId: number;
   focusRing: Phaser.GameObjects.Rectangle;
   cardIndex: number;
+  baseTint: number;
 };
 
 const DEFAULT_HIGH_SCORES: Record<GameMode, number> = {
@@ -144,12 +147,32 @@ class GameScene extends Phaser.Scene {
 
   private highScore = 0;
 
+  private boardColumns = 0;
+
+  private boardRows = 0;
+
+  private boardLeft = 0;
+
+  private boardWidth = 0;
+
+  private boardBottom = 0;
+
+  private progressContainer?: Phaser.GameObjects.Container;
+
+  private progressBarBg?: Phaser.GameObjects.Rectangle;
+
+  private progressBarFill?: Phaser.GameObjects.Rectangle;
+
+  private progressLabel?: Phaser.GameObjects.Text;
+
   constructor() {
     super('Game');
   }
 
   public create(data?: GameSceneData): void {
     this.add.image(this.scale.width / 2, this.scale.height / 2, 'background');
+
+    this.createProgressIndicator();
 
     const providedMode = data?.mode ?? (this.registry.get('mode') as GameMode) ?? 'classic';
     this.modeId = providedMode;
@@ -217,6 +240,98 @@ class GameScene extends Phaser.Scene {
     this.startLevel();
   }
 
+  private createProgressIndicator(): void {
+    if (this.progressContainer) {
+      return;
+    }
+
+    const barWidth = 360;
+    const container = this.add.container(this.scale.width / 2, this.scale.height - 56);
+    container.setDepth(6);
+    container.setVisible(false);
+    container.setAlpha(0);
+
+    const label = this.add
+      .text(0, -28, '', {
+        fontFamily: '"Poppins", "Segoe UI", sans-serif',
+        fontSize: '18px',
+        fontStyle: '600',
+        color: '#f8fafc',
+        align: 'center',
+      })
+      .setOrigin(0.5);
+    label.setShadow(0, 4, 'rgba(15, 23, 42, 0.6)', 12, false, true);
+
+    const barBackground = this.add.rectangle(0, 0, barWidth, 18, 0x0f172a, 0.68).setOrigin(0.5);
+    barBackground.setStrokeStyle(2, 0x38bdf8, 0.6);
+
+    const barFill = this.add
+      .rectangle(-barWidth / 2, 0, barWidth, 12, 0x38bdf8, 0.92)
+      .setOrigin(0, 0.5);
+    barFill.scaleX = 0;
+
+    container.add([barFill, barBackground, label]);
+
+    this.progressContainer = container;
+    this.progressBarBg = barBackground;
+    this.progressBarFill = barFill;
+    this.progressLabel = label;
+  }
+
+  private positionProgressIndicator(): void {
+    if (!this.progressContainer) {
+      return;
+    }
+
+    if (this.boardWidth <= 0) {
+      this.progressContainer.setPosition(this.scale.width / 2, this.scale.height - 56);
+      return;
+    }
+
+    const x = this.boardLeft + this.boardWidth / 2;
+    const y = Math.min(this.boardBottom + 48, this.scale.height - 44);
+    this.progressContainer.setPosition(x, y);
+  }
+
+  private updateProgressIndicator(): void {
+    if (!this.progressContainer || !this.progressBarFill || !this.progressLabel) {
+      return;
+    }
+
+    if (this.totalPairs <= 0) {
+      this.progressContainer.setVisible(false);
+      this.progressContainer.setAlpha(0);
+      this.progressBarFill.scaleX = 0;
+      return;
+    }
+
+    const matches = Phaser.Math.Clamp(this.matches, 0, this.totalPairs);
+    const progress = this.totalPairs === 0 ? 0 : matches / this.totalPairs;
+
+    this.progressLabel.setText(t('hud.progress', { found: matches, total: this.totalPairs }));
+
+    const fillColor = progress >= 0.85 ? 0x22c55e : progress >= 0.45 ? 0xfacc15 : 0x38bdf8;
+    this.progressBarFill.setFillStyle(fillColor, 0.92);
+
+    this.tweens.killTweensOf(this.progressBarFill);
+    this.tweens.add({
+      targets: this.progressBarFill,
+      scaleX: progress,
+      duration: 260,
+      ease: 'Sine.easeOut',
+    });
+
+    if (!this.progressContainer.visible) {
+      this.progressContainer.setVisible(true);
+      this.tweens.add({
+        targets: this.progressContainer,
+        alpha: 1,
+        duration: 280,
+        ease: 'Sine.easeOut',
+      });
+    }
+  }
+
   private startLevel(): void {
     const levelDefinition = this.getLevelDefinition(this.levelNumber);
     if (!levelDefinition) {
@@ -273,6 +388,11 @@ class GameScene extends Phaser.Scene {
     });
     this.cards = [];
     this.slotPositions = [];
+    if (this.progressContainer) {
+      this.progressContainer.setVisible(false);
+      this.progressContainer.setAlpha(0);
+    }
+    this.progressBarFill?.setScale(0, 1);
   }
 
   private getLevelDefinition(level: number): LevelDefinition | undefined {
@@ -316,7 +436,8 @@ class GameScene extends Phaser.Scene {
     const cellWidth = Math.min(128, Math.floor(usableWidth / columns));
     const cellHeight = Math.min(128, Math.floor(usableHeight / rows));
     const boardWidth = cellWidth * columns + spacing * (columns - 1);
-    const startX = (this.scale.width - boardWidth) / 2 + cellWidth / 2;
+    const boardOffset = this.scale.width >= 720 ? -36 : 0;
+    const startX = (this.scale.width - boardWidth) / 2 + cellWidth / 2 + boardOffset;
     const startY = layout.boardTop + cellHeight / 2;
 
     const randomGenerator =
@@ -328,6 +449,13 @@ class GameScene extends Phaser.Scene {
     const pairCount = (columns * rows) / 2;
     const deck = this.generator.generatePairs(pairCount, GameConfig.game.assets.emojiCount);
     this.totalPairs = pairCount;
+    this.boardColumns = columns;
+    this.boardRows = rows;
+    this.boardWidth = boardWidth;
+    this.boardLeft = startX - cellWidth / 2;
+    this.boardBottom =
+      startY + (rows - 1) * (cellHeight + spacing) + Math.max(cellHeight / 2, cellHeight * 0.48);
+    this.positionProgressIndicator();
 
     this.slotPositions = deck.map((_, index) => {
       const column = index % columns;
@@ -337,7 +465,11 @@ class GameScene extends Phaser.Scene {
       return { x, y };
     });
 
-    this.cards = deck.map((card, index) => this.createCard(card, index, cellWidth, cellHeight));
+    this.cards = deck.map((card, index) =>
+      this.createCard(card, index, cellWidth, cellHeight, columns),
+    );
+
+    this.updateProgressIndicator();
 
     this.tweens.add({
       targets: this.cards,
@@ -358,6 +490,7 @@ class GameScene extends Phaser.Scene {
     index: number,
     cellWidth: number,
     cellHeight: number,
+    columns: number,
   ): CardSprite {
     const position = this.slotPositions[index];
     const sprite = this.add.image(position.x, position.y, 'card-back') as CardSprite;
@@ -374,6 +507,11 @@ class GameScene extends Phaser.Scene {
     sprite.setData('emojiId', card.emojiId);
     sprite.setData('emojiChar', card.char);
     sprite.setData('ariaLabel', card.label);
+
+    const row = Math.floor(index / columns);
+    const tint = CARD_ROW_TINTS[row % CARD_ROW_TINTS.length];
+    sprite.baseTint = tint;
+    sprite.setTint(tint);
 
     const focusRing = this.add.rectangle(
       position.x,
@@ -521,6 +659,7 @@ class GameScene extends Phaser.Scene {
     this.matches += 1;
     this.hud.updateScore(this.score);
     this.hud.updateStreak(this.streak, multiplier);
+    this.updateProgressIndicator();
 
     if (this.modeConfig.timer.enabled) {
       const bonus = Math.max(
@@ -664,11 +803,12 @@ class GameScene extends Phaser.Scene {
       },
       onComplete: () => {
         if (faceUp) {
+          card.clearTint();
           card.setTexture(targetTexture, targetFrame);
         } else {
           card.setTexture(targetTexture);
           if (!card.isMatched) {
-            card.clearTint();
+            card.setTint(card.baseTint);
           }
         }
         card.scaleX = 0;
@@ -813,6 +953,8 @@ class GameScene extends Phaser.Scene {
       if (card.isMatched) {
         card.setTint(scheme.match);
       } else if (!card.isFaceUp) {
+        card.setTint(card.baseTint);
+      } else {
         card.clearTint();
       }
       if (card.focusRing.visible) {
