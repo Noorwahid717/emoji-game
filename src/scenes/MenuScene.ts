@@ -23,34 +23,65 @@ class MenuScene extends Phaser.Scene {
       this.audioUnlockRegistered = false;
     });
 
-    const logoImage = this.add.image(this.scale.width / 2, -160, 'logo');
-    this.tweens.add({ targets: logoImage, y: 160, ease: 'Back.easeOut', duration: 900 });
+    const centerX = this.scale.width / 2;
+
+    const logoImage = this.add.image(centerX, -180, 'logo');
+    logoImage.setScale(0.82);
+    this.tweens.add({ targets: logoImage, y: 92, ease: 'Back.easeOut', duration: 900 });
+
+    const heroContainer = this.add.container(centerX, 224);
+    heroContainer.setDepth(2);
+
+    const heroShadow = this.add.rectangle(0, 22, 660, 232, 0x020617, 0.28);
+    heroShadow.setOrigin(0.5);
+    heroShadow.setBlendMode(Phaser.BlendModes.MULTIPLY);
+
+    const heroBackground = this.add.rectangle(0, 0, 640, 216, 0x0f172a, 0.64);
+    heroBackground.setOrigin(0.5);
+    heroBackground.setStrokeStyle(2, 0x38bdf8, 0.38);
 
     const title = this.add
-      .text(this.scale.width / 2, 140, t('app.title'), {
-        fontFamily: '"Segoe UI", Arial, sans-serif',
-        fontSize: '42px',
-        color: '#0f172a',
-        stroke: '#f8fafc',
-        strokeThickness: 6,
+      .text(0, -66, t('app.title'), {
+        fontFamily: '"Poppins", "Segoe UI", sans-serif',
+        fontSize: '48px',
+        fontStyle: '700',
+        color: '#f8fafc',
+        align: 'center',
       })
       .setOrigin(0.5);
+    title.setShadow(0, 12, 'rgba(15, 23, 42, 0.6)', 20, false, true);
 
     const subtitle = this.add
-      .text(this.scale.width / 2, 200, t('app.description'), {
-        fontFamily: '"Segoe UI", Arial, sans-serif',
-        fontSize: '24px',
-        color: '#0f172a',
-        backgroundColor: 'rgba(248,250,252,0.75)',
-        padding: { left: 12, right: 12, top: 6, bottom: 6 },
+      .text(0, -6, t('app.description'), {
+        fontFamily: '"Poppins", "Segoe UI", sans-serif',
+        fontSize: '20px',
+        fontStyle: '500',
+        color: '#cbd5f5',
+        align: 'center',
+        wordWrap: { width: 520 },
       })
       .setOrigin(0.5);
+    subtitle.setShadow(0, 8, 'rgba(15, 23, 42, 0.45)', 16, false, true);
+
+    const intro = this.add
+      .text(0, 60, t('menu.instructions'), {
+        fontFamily: '"Poppins", "Segoe UI", sans-serif',
+        fontSize: '16px',
+        fontStyle: '500',
+        color: '#e2e8f0',
+        align: 'center',
+        wordWrap: { width: 560 },
+      })
+      .setOrigin(0.5);
+    intro.setShadow(0, 6, 'rgba(15, 23, 42, 0.4)', 12, false, true);
+
+    heroContainer.add([heroShadow, heroBackground, title, subtitle, intro]);
 
     this.tweens.add({
-      targets: [title, subtitle],
+      targets: heroContainer,
       alpha: { from: 0, to: 1 },
       duration: 600,
-      delay: 200,
+      delay: 220,
     });
 
     const highScores = (this.registry.get('highscores') as Record<GameMode, number>) ?? {
@@ -64,71 +95,118 @@ class MenuScene extends Phaser.Scene {
     const dailyHighScore = loadHighScore('daily', dailySeed);
     const missionStates = getMissionStates();
 
+    const statsContainer = this.add.container(centerX, 360);
+    statsContainer.setDepth(2);
+
+    const statsBackground = this.add.rectangle(0, 0, 640, 108, 0x0f172a, 0.58);
+    statsBackground.setOrigin(0.5);
+    statsBackground.setStrokeStyle(2, 0x38bdf8, 0.34);
+
     const highScoreText = this.add
-      .text(this.scale.width / 2, 260, t('menu.bestScore', { score: highScores.classic }), {
-        fontFamily: '"Segoe UI", Arial, sans-serif',
+      .text(0, -12, t('menu.bestScore', { score: highScores.classic }), {
+        fontFamily: '"Poppins", "Segoe UI", sans-serif',
         fontSize: '24px',
-        color: '#ffffff',
-        stroke: '#0f172a',
-        strokeThickness: 4,
-        padding: { left: 10, right: 10, top: 6, bottom: 6 },
-        backgroundColor: 'rgba(15,23,42,0.45)',
+        fontStyle: '600',
+        color: '#f8fafc',
+        align: 'center',
       })
       .setOrigin(0.5);
+    highScoreText.setShadow(0, 6, 'rgba(15, 23, 42, 0.5)', 12, false, true);
+
+    const missionSummaryLabel =
+      missionStates.length > 0
+        ? `${t('missions.header')} (${missionStates.length})`
+        : t('menu.instructionsTitle');
+    const missionSummary = this.add
+      .text(0, 30, missionSummaryLabel, {
+        fontFamily: '"Poppins", "Segoe UI", sans-serif',
+        fontSize: '18px',
+        fontStyle: '500',
+        color: '#cbd5f5',
+        align: 'center',
+      })
+      .setOrigin(0.5);
+    missionSummary.setShadow(0, 4, 'rgba(15, 23, 42, 0.45)', 10, false, true);
+
+    statsContainer.add([statsBackground, highScoreText, missionSummary]);
+
+    const missionPanelHeight = Math.max(120, 84 + missionStates.length * 34);
+    const missionContainer = this.add.container(centerX, 360 + missionPanelHeight / 2 + 72);
+    missionContainer.setDepth(2);
+
+    const missionShadow = this.add.rectangle(0, 18, 660, missionPanelHeight + 32, 0x020617, 0.26);
+    missionShadow.setOrigin(0.5);
+    missionShadow.setBlendMode(Phaser.BlendModes.MULTIPLY);
+
+    const missionBackground = this.add.rectangle(0, 0, 640, missionPanelHeight, 0x0f172a, 0.54);
+    missionBackground.setOrigin(0.5);
+    missionBackground.setStrokeStyle(2, 0x38bdf8, 0.36);
 
     const missionHeader = this.add
-      .text(this.scale.width / 2, 310, t('missions.header'), {
-        fontFamily: '"Segoe UI", Arial, sans-serif',
+      .text(0, -missionPanelHeight / 2 + 36, t('missions.header'), {
+        fontFamily: '"Poppins", "Segoe UI", sans-serif',
         fontSize: '22px',
-        color: '#0f172a',
-        backgroundColor: 'rgba(248,250,252,0.75)',
-        padding: { left: 12, right: 12, top: 6, bottom: 6 },
+        fontStyle: '600',
+        color: '#f8fafc',
+        align: 'center',
       })
       .setOrigin(0.5);
+    missionHeader.setShadow(0, 6, 'rgba(15, 23, 42, 0.45)', 12, false, true);
+
+    missionContainer.add([missionShadow, missionBackground, missionHeader]);
 
     missionStates.forEach((mission, index) => {
       const status = `${mission.progress}/${mission.goal}`;
-      const line = this.add.text(
-        this.scale.width / 2,
-        missionHeader.y + 34 + index * 24,
-        `${t(mission.descriptionKey)} â€” ${status}`,
-        {
-          fontFamily: '"Segoe UI", Arial, sans-serif',
-          fontSize: '18px',
-          color: mission.completed ? '#22c55e' : '#e2e8f0',
-          backgroundColor: 'rgba(15,23,42,0.55)',
-          padding: { left: 10, right: 10, top: 4, bottom: 4 },
-        },
-      );
-      line.setOrigin(0.5);
+      const line = this.add
+        .text(
+          0,
+          -missionPanelHeight / 2 + 74 + index * 34,
+          `${t(mission.descriptionKey)} — ${status}`,
+          {
+            fontFamily: '"Poppins", "Segoe UI", sans-serif',
+            fontSize: '18px',
+            fontStyle: '500',
+            color: mission.completed ? '#22c55e' : '#e2e8f0',
+            align: 'center',
+            wordWrap: { width: 560 },
+          },
+        )
+        .setOrigin(0.5);
+      line.setShadow(0, 4, 'rgba(15, 23, 42, 0.5)', 10, false, true);
+      missionContainer.add(line);
     });
 
-    const howToButton = new PrimaryButton(this, this.scale.width / 2 - 160, 440, {
+    const controlsY = missionContainer.y + missionPanelHeight / 2 + 62;
+    const howToButton = new PrimaryButton(this, centerX - 150, controlsY, {
       label: t('menu.howToPlay'),
       onClick: () => {
         this.showInstructions();
       },
+      variant: 'secondary',
+      width: 220,
     });
 
     const locale = getLocale();
-    const languageButton = new PrimaryButton(this, this.scale.width / 2 + 160, 440, {
+    const languageButton = new PrimaryButton(this, centerX + 150, controlsY, {
       label: t('menu.language', { language: getLocaleName(locale) }),
       onClick: () => {
         this.changeLanguage();
       },
+      variant: 'secondary',
+      width: 248,
     });
 
     const modeList = Object.values(GameConfig.game.modes);
     const columns = Math.min(2, modeList.length);
-    const columnOffsets = columns === 1 ? [0] : [-160, 160];
-    const rowSpacing = 80;
-    const baseModeY = 520;
-    const descriptionOffset = 22;
+    const columnOffsets = columns === 1 ? [0] : [-170, 170];
+    const rowSpacing = 110;
+    const baseModeY = controlsY + 94;
+    const descriptionOffset = 34;
 
     modeList.forEach((mode, index) => {
       const column = index % columns;
       const row = Math.floor(index / columns);
-      const x = this.scale.width / 2 + columnOffsets[column];
+      const x = centerX + columnOffsets[column];
       const y = baseModeY + row * rowSpacing;
       const label = t('menu.startMode', { mode: t(mode.labelKey) });
       const button = new PrimaryButton(this, x, y, {
@@ -136,6 +214,7 @@ class MenuScene extends Phaser.Scene {
         onClick: () => {
           this.launchGame(mode.id);
         },
+        width: 260,
       });
 
       if (mode.id === preferredMode) {
@@ -148,13 +227,15 @@ class MenuScene extends Phaser.Scene {
           : (highScores[mode.id as Exclude<GameMode, 'daily'>] ?? 0);
       const description = this.add
         .text(x, y + descriptionOffset, '', {
-          fontFamily: '"Segoe UI", Arial, sans-serif',
-          fontSize: '16px',
-          color: '#e2e8f0',
+          fontFamily: '"Poppins", "Segoe UI", sans-serif',
+          fontSize: '15px',
+          fontStyle: '500',
+          color: '#dbeafe',
           align: 'center',
-          wordWrap: { width: 240 },
+          wordWrap: { width: 260 },
         })
         .setOrigin(0.5);
+      description.setShadow(0, 4, 'rgba(15, 23, 42, 0.5)', 8, false, true);
       description.setText(
         `${t(mode.descriptionKey)}\n${t('menu.modeBestScore', { score: scoreValue })}`,
       );
@@ -172,10 +253,26 @@ class MenuScene extends Phaser.Scene {
       );
     }
 
-    highScoreText.setAlpha(0);
-    this.tweens.add({ targets: highScoreText, alpha: 1, duration: 800, delay: 300 });
-    [howToButton, languageButton].forEach((button) => {
-      this.tweens.add({ targets: button, alpha: { from: 0, to: 1 }, duration: 600, delay: 240 });
+    this.tweens.add({
+      targets: statsContainer,
+      alpha: { from: 0, to: 1 },
+      duration: 600,
+      delay: 260,
+    });
+    this.tweens.add({
+      targets: missionContainer,
+      alpha: { from: 0, to: 1 },
+      duration: 600,
+      delay: 320,
+    });
+    [howToButton, languageButton].forEach((button, index) => {
+      this.tweens.add({
+        targets: button,
+        alpha: { from: 0, to: 1 },
+        duration: 500,
+        delay: 360 + index * 80,
+        ease: 'Sine.easeOut',
+      });
     });
   }
 
