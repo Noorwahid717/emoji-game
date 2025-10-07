@@ -19,7 +19,6 @@ const VARIANT_COLORS: Record<
 
 export class PrimaryButton extends Phaser.GameObjects.Container {
   private readonly background: Phaser.GameObjects.Rectangle;
-
   private readonly label: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene, x: number, y: number, options: ButtonOptions) {
@@ -27,20 +26,21 @@ export class PrimaryButton extends Phaser.GameObjects.Container {
 
     const variant = options.variant ?? 'primary';
     const palette = VARIANT_COLORS[variant];
-    const width = options.width ?? 280;
-    const height = 72;
 
-    const shadow = scene.add.rectangle(0, 6, width, height, 0x0f172a, 0.28);
+    const width = options.width ?? 248;
+    const height = 60;
+
+    const shadow = scene.add.rectangle(0, 8, width + 18, height + 16, 0x0f172a, 0.25);
     shadow.setOrigin(0.5, 0.5);
-    shadow.setAngle(2);
+    shadow.setAngle(1.4);
 
-    this.background = scene.add.rectangle(0, 0, width, height, palette.base, 0.96);
-    this.background.setStrokeStyle(4, palette.stroke, 0.92);
+    this.background = scene.add.rectangle(0, 0, width, height, palette.base, 0.98);
+    this.background.setStrokeStyle(3, palette.stroke, 0.9);
     this.background.setOrigin(0.5, 0.5);
 
     this.label = scene.add.text(0, 0, options.label, {
       fontFamily: '"Poppins", "Segoe UI", sans-serif',
-      fontSize: '26px',
+      fontSize: '22px',
       fontStyle: '600',
       color: '#f8fafc',
       align: 'center',
@@ -51,18 +51,20 @@ export class PrimaryButton extends Phaser.GameObjects.Container {
     this.add([shadow, this.background, this.label]);
     scene.add.existing(this);
 
-    this.setSize(width, height + 8);
+    // Area interaktif sedikit lebih besar dari background untuk memudahkan klik
+    this.setSize(width + 18, height + 18);
+
     this.setInteractive({ useHandCursor: true })
       .on('pointerover', () => {
-        this.background.setFillStyle(palette.hover, 0.98);
-        this.scene.tweens.add({ targets: this, scale: 1.05, duration: 140, ease: 'Sine.easeOut' });
+        this.background.setFillStyle(palette.hover, 1);
+        this.scene.tweens.add({ targets: this, scale: 1.04, duration: 140, ease: 'Sine.easeOut' });
       })
       .on('pointerout', () => {
-        this.background.setFillStyle(palette.base, 0.96);
+        this.background.setFillStyle(palette.base, 0.98);
         this.scene.tweens.add({ targets: this, scale: 1, duration: 140, ease: 'Sine.easeInOut' });
       })
       .on('pointerdown', () => {
-        this.background.setFillStyle(palette.press, 0.98);
+        this.background.setFillStyle(palette.press, 1);
         this.scene.tweens.add({
           targets: this,
           scale: 0.96,

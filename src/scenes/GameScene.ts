@@ -1,4 +1,4 @@
-﻿import Phaser from 'phaser';
+import Phaser from 'phaser';
 
 import {
   GameConfig,
@@ -164,6 +164,10 @@ class GameScene extends Phaser.Scene {
   private progressBarFill?: Phaser.GameObjects.Rectangle;
 
   private progressLabel?: Phaser.GameObjects.Text;
+
+  private boardShadow?: Phaser.GameObjects.Rectangle;
+
+  private boardBackdrop?: Phaser.GameObjects.Rectangle;
 
   constructor() {
     super('Game');
@@ -436,7 +440,15 @@ class GameScene extends Phaser.Scene {
     const cellWidth = Math.min(128, Math.floor(usableWidth / columns));
     const cellHeight = Math.min(128, Math.floor(usableHeight / rows));
     const boardWidth = cellWidth * columns + spacing * (columns - 1);
-    const boardOffset = this.scale.width >= 720 ? -36 : 0;
+    const boardHeight = cellHeight * rows + spacing * (rows - 1);
+    const boardOffset =
+      this.scale.width >= 900
+        ? -130
+        : this.scale.width >= 760
+        ? -90
+        : this.scale.width >= 640
+        ? -48
+        : 0;
     const startX = (this.scale.width - boardWidth) / 2 + cellWidth / 2 + boardOffset;
     const startY = layout.boardTop + cellHeight / 2;
 
@@ -455,6 +467,34 @@ class GameScene extends Phaser.Scene {
     this.boardLeft = startX - cellWidth / 2;
     this.boardBottom =
       startY + (rows - 1) * (cellHeight + spacing) + Math.max(cellHeight / 2, cellHeight * 0.48);
+
+    const boardCenterX = startX + ((columns - 1) * (cellWidth + spacing)) / 2;
+    const boardCenterY = startY + ((rows - 1) * (cellHeight + spacing)) / 2;
+    this.boardShadow?.destroy();
+    this.boardBackdrop?.destroy();
+    this.boardShadow = this.add.rectangle(
+      boardCenterX,
+      boardCenterY + 16,
+      boardWidth + 72,
+      boardHeight + 76,
+      0x020617,
+      0.26,
+    );
+    this.boardShadow.setOrigin(0.5);
+    this.boardShadow.setDepth(-2);
+    this.boardShadow.setBlendMode(Phaser.BlendModes.MULTIPLY);
+    this.boardBackdrop = this.add.rectangle(
+      boardCenterX,
+      boardCenterY,
+      boardWidth + 56,
+      boardHeight + 60,
+      0x0b1120,
+      0.6,
+    );
+    this.boardBackdrop.setOrigin(0.5);
+    this.boardBackdrop.setStrokeStyle(2, 0x38bdf8, 0.36);
+    this.boardBackdrop.setDepth(-1);
+
     this.positionProgressIndicator();
 
     this.slotPositions = deck.map((_, index) => {
@@ -1249,6 +1289,10 @@ class GameScene extends Phaser.Scene {
     if (this.keyboardListener && this.input.keyboard) {
       this.input.keyboard.off('keydown', this.keyboardListener, this);
     }
+    this.boardBackdrop?.destroy();
+    this.boardBackdrop = undefined;
+    this.boardShadow?.destroy();
+    this.boardShadow = undefined;
   }
 
   private handleAudioToggle = (muted: boolean): void => {

@@ -35,90 +35,86 @@ interface PowerUpButton {
 
 export class Hud extends Phaser.GameObjects.Container {
   private readonly scoreText: Phaser.GameObjects.Text;
-
   private readonly timerText: Phaser.GameObjects.Text;
-
   private readonly highScoreText: Phaser.GameObjects.Text;
-
   private readonly levelText: Phaser.GameObjects.Text;
-
   private readonly streakText: Phaser.GameObjects.Text;
-
   private readonly movesText: Phaser.GameObjects.Text;
-
   private readonly modeText: Phaser.GameObjects.Text;
-
   private readonly statusText: Phaser.GameObjects.Text;
 
   private readonly audioButton: Phaser.GameObjects.Container;
-
   private readonly audioIcon: Phaser.GameObjects.Text;
 
   private readonly colorButton: Phaser.GameObjects.Container;
-
   private readonly colorIcon: Phaser.GameObjects.Text;
 
   private readonly powerUpButtons: Record<PowerUpType, PowerUpButton>;
 
   private readonly audioEnabled: boolean;
-
   private audioMuted: boolean;
-
   private colorBlindMode: boolean;
 
   private readonly onToggleAudio: (muted: boolean) => void;
-
   private readonly onToggleColorBlind: (enabled: boolean) => void;
-
   private readonly powerUpCallbacks: PowerUpCallbacks;
 
   private localeDisposer?: () => void;
 
   private currentScore = 0;
-
   private currentHighScore: number;
-
   private currentTime = 0;
-
   private currentLevel = 1;
-
   private currentStreak = 0;
-
   private currentMoves = 0;
-
   private currentMultiplier = 1;
 
   private readonly timerEnabled: boolean;
-
   private readonly timerWarning: number;
-
   private readonly modeLabelKey: string;
 
   private readonly tooltipContainer: Phaser.GameObjects.Container;
-
   private readonly tooltipBackground: Phaser.GameObjects.Rectangle;
-
   private readonly tooltipText: Phaser.GameObjects.Text;
-
   private tooltipTween?: Phaser.Tweens.Tween;
+
+  // Power rail layout (from codex branch)
+  private readonly powerRailX: number;
+  private readonly powerRailSpacing: number;
+  private readonly powerRailBaseY: number;
 
   constructor(scene: Phaser.Scene, options: HudOptions) {
     super(scene, 0, 0);
     scene.add.existing(this);
 
+    const sidebarEnabled = scene.scale.width >= 900;
+    const headerWidth = Math.min(scene.scale.width - 72, 720);
+    const headerCenterX = scene.scale.width / 2;
+    const headerCenterY = 60;
+
+    scene.add
+      .rectangle(headerCenterX, headerCenterY + 16, headerWidth + 32, 126, 0x020617, 0.26)
+      .setOrigin(0.5)
+      .setDepth(3)
+      .setBlendMode(Phaser.BlendModes.MULTIPLY);
+
+    const headerBackground = scene.add
+      .rectangle(headerCenterX, headerCenterY, headerWidth, 114, 0x0b1120, 0.58)
+      .setOrigin(0.5)
+      .setDepth(4);
+    headerBackground.setStrokeStyle(2, 0x38bdf8, 0.32);
+
     const baseStyle: Phaser.Types.GameObjects.Text.TextStyle = {
       fontFamily: '"Poppins", "Segoe UI", sans-serif',
-      fontSize: '26px',
+      fontSize: '22px',
       fontStyle: '600',
-      color: '#f8fafc',
-      backgroundColor: 'rgba(15,23,42,0.72)',
-      padding: { left: 16, right: 16, top: 10, bottom: 10 },
+      color: '#e2e8f0',
     };
 
-    const leftX = 32;
-    const topY = 28;
-    const verticalSpacing = 72;
-    const rightX = scene.scale.width - 32;
+    const leftX = headerCenterX - headerWidth / 2 + 32;
+    const rightX = headerCenterX + headerWidth / 2 - 32;
+    const topRowY = headerCenterY - 26;
+    const verticalSpacing = 38;
 
     this.currentHighScore = options.highScore;
     this.currentLevel = options.level;
@@ -127,47 +123,55 @@ export class Hud extends Phaser.GameObjects.Container {
     this.modeLabelKey = options.modeLabelKey;
     this.powerUpCallbacks = options.powerUpCallbacks;
 
-    this.highScoreText = scene.add.text(leftX, topY, '', baseStyle).setDepth(5);
-    this.scoreText = scene.add.text(leftX, topY + verticalSpacing, '', baseStyle).setDepth(5);
-    this.levelText = scene.add.text(leftX, topY + verticalSpacing * 2, '', baseStyle).setDepth(5);
+    this.highScoreText = scene.add
+      .text(leftX, topRowY, '', baseStyle)
+      .setDepth(5)
+      .setOrigin(0, 0.5);
+    this.scoreText = scene.add
+      .text(leftX, topRowY + verticalSpacing, '', baseStyle)
+      .setDepth(5)
+      .setOrigin(0, 0.5);
+    this.levelText = scene.add
+      .text(leftX, topRowY + verticalSpacing * 2, '', baseStyle)
+      .setDepth(5)
+      .setOrigin(0, 0.5);
 
     [this.highScoreText, this.scoreText, this.levelText].forEach((text) => {
-      text.setOrigin(0, 0);
-      text.setShadow(0, 4, 'rgba(15, 23, 42, 0.55)', 10, false, true);
+      text.setOrigin(0, 0.5);
+      text.setShadow(0, 3, 'rgba(15, 23, 42, 0.55)', 8, false, true);
     });
 
     this.modeText = scene.add
-      .text(scene.scale.width / 2, topY, '', {
+      .text(headerCenterX, headerCenterY - headerBackground.height / 2 + 18, '', {
         ...baseStyle,
-        fontSize: '22px',
+        fontSize: '18px',
         fontStyle: '600',
-        padding: { left: 14, right: 14, top: 6, bottom: 6 },
       })
-      .setOrigin(0.5, 0)
+      .setOrigin(0.5, 0.5)
       .setDepth(5);
-    this.modeText.setShadow(0, 4, 'rgba(15, 23, 42, 0.5)', 10, false, true);
+    this.modeText.setShadow(0, 3, 'rgba(15, 23, 42, 0.45)', 10, false, true);
 
-    this.timerText = scene.add.text(rightX, topY, '', baseStyle).setOrigin(1, 0).setDepth(5);
+    this.timerText = scene.add.text(rightX, topRowY, '', baseStyle).setOrigin(1, 0.5).setDepth(5);
     this.streakText = scene.add
-      .text(rightX, topY + verticalSpacing, '', baseStyle)
-      .setOrigin(1, 0)
+      .text(rightX, topRowY + verticalSpacing, '', baseStyle)
+      .setOrigin(1, 0.5)
       .setDepth(5);
     this.movesText = scene.add
-      .text(rightX, topY + verticalSpacing * 2, '', baseStyle)
-      .setOrigin(1, 0)
+      .text(rightX, topRowY + verticalSpacing * 2, '', baseStyle)
+      .setOrigin(1, 0.5)
       .setDepth(5);
 
     [this.timerText, this.streakText, this.movesText].forEach((text) => {
-      text.setShadow(0, 4, 'rgba(15, 23, 42, 0.55)', 10, false, true);
+      text.setShadow(0, 3, 'rgba(15, 23, 42, 0.55)', 8, false, true);
     });
 
     this.statusText = scene.add
-      .text(scene.scale.width / 2, topY + verticalSpacing * 1.1, '', {
+      .text(headerCenterX, headerCenterY + headerBackground.height / 2 + 28, '', {
         ...baseStyle,
-        fontSize: '22px',
+        fontSize: '20px',
         fontStyle: '600',
-        backgroundColor: 'rgba(15,23,42,0.58)',
-        padding: { left: 16, right: 16, top: 6, bottom: 6 },
+        backgroundColor: 'rgba(15,23,42,0.6)',
+        padding: { left: 14, right: 14, top: 6, bottom: 6 },
       })
       .setOrigin(0.5)
       .setDepth(6)
@@ -196,11 +200,38 @@ export class Hud extends Phaser.GameObjects.Container {
     this.onToggleAudio = options.onToggleAudio;
     this.onToggleColorBlind = options.onToggleColorBlind;
 
-    const controlY = topY + verticalSpacing * 2 + 56;
+    // Power rail (sidebar) from codex branch
+    const railWidth = sidebarEnabled ? 164 : 150;
+    const railHeight = Math.min(scene.scale.height - 140, sidebarEnabled ? 480 : 440);
+    const railX = scene.scale.width - (sidebarEnabled ? 96 : 82);
+    const railY = scene.scale.height / 2 + 12;
+    const railTop = railY - railHeight / 2;
 
-    this.audioButton = scene.add.container(scene.scale.width - 76, controlY).setDepth(6);
-    const audioBackground = scene.add.rectangle(0, 0, 64, 64, 0x0f172a, 0.72);
-    audioBackground.setStrokeStyle(3, 0x38bdf8, 0.85);
+    scene.add
+      .rectangle(railX, railY + 18, railWidth + 20, railHeight + 28, 0x020617, 0.24)
+      .setOrigin(0.5)
+      .setDepth(3)
+      .setBlendMode(Phaser.BlendModes.MULTIPLY);
+
+    const railBackground = scene.add
+      .rectangle(railX, railY, railWidth, railHeight, 0x0b1120, 0.56)
+      .setOrigin(0.5)
+      .setDepth(4);
+    railBackground.setStrokeStyle(2, 0x38bdf8, 0.34);
+
+    this.powerRailX = railX;
+    this.powerRailSpacing = sidebarEnabled ? 92 : 88;
+    const firstSlotY = railTop + 64;
+    const secondSlotY = firstSlotY + this.powerRailSpacing;
+    this.powerRailBaseY = secondSlotY + this.powerRailSpacing;
+
+    const toggleWidth = sidebarEnabled ? 94 : 88;
+    const toggleHeight = sidebarEnabled ? 78 : 74;
+
+    // Audio toggle
+    this.audioButton = scene.add.container(this.powerRailX, firstSlotY).setDepth(6);
+    const audioBackground = scene.add.rectangle(0, 0, toggleWidth, toggleHeight, 0x0f172a, 0.72);
+    audioBackground.setStrokeStyle(2, 0x38bdf8, 0.82);
     audioBackground.setOrigin(0.5);
     audioBackground.setInteractive({ useHandCursor: this.audioEnabled });
     audioBackground.on('pointerover', () => {
@@ -234,17 +265,22 @@ export class Hud extends Phaser.GameObjects.Container {
       })
       .setOrigin(0.5);
     this.audioIcon.setShadow(0, 3, 'rgba(15, 23, 42, 0.5)', 8, false, true);
-
     this.audioButton.add([audioBackground, this.audioIcon]);
-    this.audioButton.setSize(64, 64);
-    this.attachTooltip(audioBackground, this.audioButton, () => {
-      const label = this.audioButton.getData('label') as string | undefined;
-      return label ?? t('hud.toggleAudio');
-    });
+    this.audioButton.setSize(toggleWidth, toggleHeight);
+    this.attachTooltip(
+      audioBackground,
+      this.audioButton,
+      () => {
+        const label = this.audioButton.getData('label') as string | undefined;
+        return label ?? t('hud.toggleAudio');
+      },
+      { x: -96, y: 0 },
+    );
 
-    this.colorButton = scene.add.container(scene.scale.width - 156, controlY).setDepth(6);
-    const colorBackground = scene.add.rectangle(0, 0, 64, 64, 0x0f172a, 0.72);
-    colorBackground.setStrokeStyle(3, 0x10b981, 0.85);
+    // Color blind toggle
+    this.colorButton = scene.add.container(this.powerRailX, secondSlotY).setDepth(6);
+    const colorBackground = scene.add.rectangle(0, 0, toggleWidth, toggleHeight, 0x0f172a, 0.72);
+    colorBackground.setStrokeStyle(2, 0x10b981, 0.82);
     colorBackground.setOrigin(0.5);
     colorBackground.setInteractive({ useHandCursor: true });
     colorBackground.on('pointerover', () => {
@@ -278,12 +314,18 @@ export class Hud extends Phaser.GameObjects.Container {
     this.colorIcon.setShadow(0, 3, 'rgba(15, 23, 42, 0.5)', 8, false, true);
 
     this.colorButton.add([colorBackground, this.colorIcon]);
-    this.colorButton.setSize(64, 64);
-    this.attachTooltip(colorBackground, this.colorButton, () => {
-      const label = this.colorButton.getData('label') as string | undefined;
-      return label ?? t('hud.toggleColorBlind');
-    });
+    this.colorButton.setSize(toggleWidth, toggleHeight);
+    this.attachTooltip(
+      colorBackground,
+      this.colorButton,
+      () => {
+        const label = this.colorButton.getData('label') as string | undefined;
+        return label ?? t('hud.toggleColorBlind');
+      },
+      { x: -96, y: 0 },
+    );
 
+    // Power-ups
     this.powerUpButtons = {
       hint: this.createPowerUpButton('hint', '💡', 'hud.powerups.hint', options.powerUps.hint, 0),
       freeze: this.createPowerUpButton(
@@ -337,9 +379,9 @@ export class Hud extends Phaser.GameObjects.Container {
     this.timerText.setText(t('hud.timer', { time: formatted }));
 
     if (secondsRemaining <= this.timerWarning) {
-      this.timerText.setColor('#f97316');
+      this.timerText.setColor('#facc15');
     } else {
-      this.timerText.setColor('#ffffff');
+      this.timerText.setColor('#e2e8f0');
     }
 
     announceTimer(Math.max(0, secondsRemaining));
@@ -373,9 +415,8 @@ export class Hud extends Phaser.GameObjects.Container {
 
   public updatePowerUpCount(type: PowerUpType, remaining: number): void {
     const button = this.powerUpButtons[type];
-    if (!button) {
-      return;
-    }
+    if (!button) return;
+
     button.remaining = remaining;
     button.count.setText(`x${remaining}`);
     const disabled = (button.container.getData('disabled') as boolean) ?? false;
@@ -388,9 +429,8 @@ export class Hud extends Phaser.GameObjects.Container {
 
   public setPowerUpDisabled(type: PowerUpType, disabled: boolean): void {
     const button = this.powerUpButtons[type];
-    if (!button) {
-      return;
-    }
+    if (!button) return;
+
     button.container.setData('disabled', disabled);
     const alpha = disabled ? 0.4 : button.remaining > 0 ? 1 : 0.35;
     button.container.setAlpha(alpha);
@@ -414,9 +454,8 @@ export class Hud extends Phaser.GameObjects.Container {
 
   private handlePowerUp(type: PowerUpType): void {
     const button = this.powerUpButtons[type];
-    if (!button || button.remaining <= 0 || button.container.getData('disabled')) {
-      return;
-    }
+    if (!button || button.remaining <= 0 || button.container.getData('disabled')) return;
+
     button.remaining -= 1;
     this.scene.tweens.add({
       targets: button.container,
@@ -437,25 +476,25 @@ export class Hud extends Phaser.GameObjects.Container {
     initialCount: number,
     index: number,
   ): PowerUpButton {
-    const x = this.scene.scale.width - 72;
-    const y = 332 + index * 96;
+    const x = this.powerRailX;
+    const y = this.powerRailBaseY + index * this.powerRailSpacing;
 
     const container = this.scene.add.container(x, y).setDepth(6);
-    const background = this.scene.add.rectangle(0, 0, 96, 76, 0x0f172a, 0.74);
-    background.setStrokeStyle(3, 0x38bdf8, 0.85);
+    const background = this.scene.add.rectangle(0, 0, 112, 82, 0x0f172a, 0.74);
+    background.setStrokeStyle(2, 0x38bdf8, 0.82);
     background.setOrigin(0.5);
 
     const iconText = this.scene.add
-      .text(-18, 0, icon, {
+      .text(-22, 0, icon, {
         fontFamily: '"Segoe UI Emoji", "Apple Color Emoji", Arial',
-        fontSize: '36px',
+        fontSize: '34px',
         color: '#f8fafc',
       })
       .setOrigin(0.5);
     iconText.setShadow(0, 3, 'rgba(15, 23, 42, 0.5)', 8, false, true);
 
     const countText = this.scene.add
-      .text(26, 0, `x${initialCount}`, {
+      .text(30, 0, `x${initialCount}`, {
         fontFamily: '"Poppins", "Segoe UI", sans-serif',
         fontSize: '20px',
         fontStyle: '600',
@@ -465,7 +504,7 @@ export class Hud extends Phaser.GameObjects.Container {
     countText.setShadow(0, 3, 'rgba(15, 23, 42, 0.5)', 8, false, true);
 
     container.add([background, iconText, countText]);
-    container.setSize(96, 76);
+    container.setSize(112, 82);
     container.setAlpha(initialCount > 0 ? 1 : 0.35);
     container.setData('labelKey', labelKey);
     container.setData('label', t(labelKey));
@@ -504,7 +543,7 @@ export class Hud extends Phaser.GameObjects.Container {
       }
     });
 
-    this.attachTooltip(background, container, () => t(labelKey));
+    this.attachTooltip(background, container, () => t(labelKey), { x: -104, y: 0 });
 
     return powerUpButton;
   }
@@ -519,9 +558,7 @@ export class Hud extends Phaser.GameObjects.Container {
     const offsetY = offset.y ?? -58;
     target.on('pointerover', () => {
       const label = getLabel();
-      if (!label) {
-        return;
-      }
+      if (!label) return;
       this.showTooltip(anchor.x + offsetX, anchor.y + offsetY, label);
     });
     target.on('pointerout', () => {
@@ -533,9 +570,8 @@ export class Hud extends Phaser.GameObjects.Container {
   }
 
   private showTooltip(x: number, y: number, text: string): void {
-    if (!text.trim()) {
-      return;
-    }
+    if (!text.trim()) return;
+
     this.tooltipText.setText(text);
     const targetWidth = Math.max(160, this.tooltipText.width + 32);
     this.tooltipBackground.setDisplaySize(targetWidth, 44);
@@ -555,9 +591,8 @@ export class Hud extends Phaser.GameObjects.Container {
   }
 
   private hideTooltip(): void {
-    if (!this.tooltipContainer.visible) {
-      return;
-    }
+    if (!this.tooltipContainer.visible) return;
+
     this.tooltipTween?.stop();
     this.tooltipTween = this.scene.tweens.add({
       targets: this.tooltipContainer,
@@ -571,9 +606,7 @@ export class Hud extends Phaser.GameObjects.Container {
   }
 
   private toggleAudio(): void {
-    if (!this.audioEnabled) {
-      return;
-    }
+    if (!this.audioEnabled) return;
 
     this.audioMuted = !this.audioMuted;
     this.updateAudioIcon();
