@@ -24,27 +24,31 @@ class MenuScene extends Phaser.Scene {
     });
 
     const logoImage = this.add.image(this.scale.width / 2, -160, 'logo');
-    this.tweens.add({ targets: logoImage, y: 160, ease: 'Back.easeOut', duration: 900 });
+    this.tweens.add({ targets: logoImage, y: 120, ease: 'Back.easeOut', duration: 900 });
 
     const title = this.add
-      .text(this.scale.width / 2, 140, t('app.title'), {
-        fontFamily: '"Segoe UI", Arial, sans-serif',
-        fontSize: '42px',
-        color: '#0f172a',
-        stroke: '#f8fafc',
-        strokeThickness: 6,
+      .text(this.scale.width / 2, 190, t('app.title'), {
+        fontFamily: '"Poppins", "Segoe UI", sans-serif',
+        fontSize: '48px',
+        fontStyle: '700',
+        color: '#f8fafc',
+        align: 'center',
       })
       .setOrigin(0.5);
+    title.setShadow(0, 10, 'rgba(15, 23, 42, 0.55)', 18, false, true);
 
     const subtitle = this.add
-      .text(this.scale.width / 2, 200, t('app.description'), {
-        fontFamily: '"Segoe UI", Arial, sans-serif',
-        fontSize: '24px',
-        color: '#0f172a',
-        backgroundColor: 'rgba(248,250,252,0.75)',
-        padding: { left: 12, right: 12, top: 6, bottom: 6 },
+      .text(this.scale.width / 2, 246, t('app.description'), {
+        fontFamily: '"Poppins", "Segoe UI", sans-serif',
+        fontSize: '20px',
+        fontStyle: '500',
+        color: '#e2e8f0',
+        align: 'center',
+        padding: { left: 16, right: 16, top: 8, bottom: 8 },
+        backgroundColor: 'rgba(15,23,42,0.55)',
       })
       .setOrigin(0.5);
+    subtitle.setShadow(0, 6, 'rgba(15, 23, 42, 0.45)', 12, false, true);
 
     this.tweens.add({
       targets: [title, subtitle],
@@ -65,65 +69,80 @@ class MenuScene extends Phaser.Scene {
     const missionStates = getMissionStates();
 
     const highScoreText = this.add
-      .text(this.scale.width / 2, 260, t('menu.bestScore', { score: highScores.classic }), {
-        fontFamily: '"Segoe UI", Arial, sans-serif',
+      .text(this.scale.width / 2, 308, t('menu.bestScore', { score: highScores.classic }), {
+        fontFamily: '"Poppins", "Segoe UI", sans-serif',
         fontSize: '24px',
-        color: '#ffffff',
-        stroke: '#0f172a',
-        strokeThickness: 4,
-        padding: { left: 10, right: 10, top: 6, bottom: 6 },
-        backgroundColor: 'rgba(15,23,42,0.45)',
+        fontStyle: '600',
+        color: '#f8fafc',
+        padding: { left: 16, right: 16, top: 10, bottom: 10 },
+        backgroundColor: 'rgba(15,23,42,0.65)',
       })
+      .setOrigin(0.5);
+    highScoreText.setShadow(0, 8, 'rgba(15, 23, 42, 0.55)', 14, false, true);
+
+    const missionPanelHeight = 84 + missionStates.length * 32;
+    const missionPanel = this.add
+      .rectangle(this.scale.width / 2, 420, 540, missionPanelHeight, 0x0f172a, 0.42)
+      .setStrokeStyle(2, 0x38bdf8, 0.4)
       .setOrigin(0.5);
 
     const missionHeader = this.add
-      .text(this.scale.width / 2, 310, t('missions.header'), {
-        fontFamily: '"Segoe UI", Arial, sans-serif',
-        fontSize: '22px',
-        color: '#0f172a',
-        backgroundColor: 'rgba(248,250,252,0.75)',
-        padding: { left: 12, right: 12, top: 6, bottom: 6 },
-      })
+      .text(
+        this.scale.width / 2,
+        missionPanel.y - missionPanelHeight / 2 + 36,
+        t('missions.header'),
+        {
+          fontFamily: '"Poppins", "Segoe UI", sans-serif',
+          fontSize: '22px',
+          fontStyle: '600',
+          color: '#f8fafc',
+          align: 'center',
+        },
+      )
       .setOrigin(0.5);
+    missionHeader.setShadow(0, 6, 'rgba(15, 23, 42, 0.45)', 10, false, true);
 
     missionStates.forEach((mission, index) => {
       const status = `${mission.progress}/${mission.goal}`;
       const line = this.add.text(
         this.scale.width / 2,
-        missionHeader.y + 34 + index * 24,
-        `${t(mission.descriptionKey)} â€” ${status}`,
+        missionHeader.y + 36 + index * 32,
+        `${t(mission.descriptionKey)} — ${status}`,
         {
-          fontFamily: '"Segoe UI", Arial, sans-serif',
+          fontFamily: '"Poppins", "Segoe UI", sans-serif',
           fontSize: '18px',
+          fontStyle: '500',
           color: mission.completed ? '#22c55e' : '#e2e8f0',
-          backgroundColor: 'rgba(15,23,42,0.55)',
-          padding: { left: 10, right: 10, top: 4, bottom: 4 },
+          align: 'center',
         },
       );
       line.setOrigin(0.5);
+      line.setShadow(0, 4, 'rgba(15, 23, 42, 0.5)', 10, false, true);
     });
 
-    const howToButton = new PrimaryButton(this, this.scale.width / 2 - 160, 440, {
+    const howToButton = new PrimaryButton(this, this.scale.width / 2 - 170, 468, {
       label: t('menu.howToPlay'),
       onClick: () => {
         this.showInstructions();
       },
+      variant: 'secondary',
     });
 
     const locale = getLocale();
-    const languageButton = new PrimaryButton(this, this.scale.width / 2 + 160, 440, {
+    const languageButton = new PrimaryButton(this, this.scale.width / 2 + 170, 468, {
       label: t('menu.language', { language: getLocaleName(locale) }),
       onClick: () => {
         this.changeLanguage();
       },
+      variant: 'secondary',
     });
 
     const modeList = Object.values(GameConfig.game.modes);
     const columns = Math.min(2, modeList.length);
     const columnOffsets = columns === 1 ? [0] : [-160, 160];
-    const rowSpacing = 80;
-    const baseModeY = 520;
-    const descriptionOffset = 22;
+    const rowSpacing = 92;
+    const baseModeY = 560;
+    const descriptionOffset = 30;
 
     modeList.forEach((mode, index) => {
       const column = index % columns;
@@ -148,13 +167,15 @@ class MenuScene extends Phaser.Scene {
           : (highScores[mode.id as Exclude<GameMode, 'daily'>] ?? 0);
       const description = this.add
         .text(x, y + descriptionOffset, '', {
-          fontFamily: '"Segoe UI", Arial, sans-serif',
+          fontFamily: '"Poppins", "Segoe UI", sans-serif',
           fontSize: '16px',
-          color: '#e2e8f0',
+          fontStyle: '500',
+          color: '#dbeafe',
           align: 'center',
-          wordWrap: { width: 240 },
+          wordWrap: { width: 260 },
         })
         .setOrigin(0.5);
+      description.setShadow(0, 4, 'rgba(15, 23, 42, 0.5)', 8, false, true);
       description.setText(
         `${t(mode.descriptionKey)}\n${t('menu.modeBestScore', { score: scoreValue })}`,
       );
