@@ -19,7 +19,6 @@ const VARIANT_COLORS: Record<
 
 export class PrimaryButton extends Phaser.GameObjects.Container {
   private readonly background: Phaser.GameObjects.Rectangle;
-
   private readonly label: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene, x: number, y: number, options: ButtonOptions) {
@@ -27,6 +26,7 @@ export class PrimaryButton extends Phaser.GameObjects.Container {
 
     const variant = options.variant ?? 'primary';
     const palette = VARIANT_COLORS[variant];
+
     const width = options.width ?? 248;
     const height = 60;
 
@@ -51,7 +51,9 @@ export class PrimaryButton extends Phaser.GameObjects.Container {
     this.add([shadow, this.background, this.label]);
     scene.add.existing(this);
 
+    // Area interaktif sedikit lebih besar dari background untuk memudahkan klik
     this.setSize(width + 18, height + 18);
+
     this.setInteractive({ useHandCursor: true })
       .on('pointerover', () => {
         this.background.setFillStyle(palette.hover, 1);

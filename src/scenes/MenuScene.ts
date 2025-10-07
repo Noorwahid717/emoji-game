@@ -1,4 +1,4 @@
-﻿import Phaser from 'phaser';
+import Phaser from 'phaser';
 
 import { GameConfig, type GameMode } from '../config/GameConfig';
 import { cycleLocale, getLocale, getLocaleName, t } from '../core/locale/Localization';
