@@ -50,6 +50,7 @@ export class PrimaryButton extends Phaser.GameObjects.Container {
 
     this.add([shadow, this.background, this.label]);
     scene.add.existing(this);
+    this.setDepth(12); // ✅ fixed: ensure buttons render above overlays
 
     // Area interaktif sedikit lebih besar dari background untuk memudahkan klik
     this.setSize(width + 18, height + 18);

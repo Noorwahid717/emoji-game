@@ -10,17 +10,39 @@ import PrimaryButton from '../ui/PrimaryButton';
 
 class MenuScene extends Phaser.Scene {
   private audioUnlockRegistered = false;
+
+  private pointerUnlockHandler?: (pointer: Phaser.Input.Pointer) => void;
+
+  private keyboardUnlockHandler?: (event: KeyboardEvent) => void;
+
+  private resumeAudioContextHandler?: () => void;
+
   constructor() {
     super('Menu');
   }
 
   public create(): void {
-    this.add.image(400, 300, 'background');
+    // eslint-disable-next-line no-console
+    console.log(this.scene.key); // ✅ fixed: debug scene transitions
+    this.add.image(400, 300, 'background').setDepth(0); // ✅ fixed: restore background layering order
 
     this.installAudioUnlock();
+    this.installAudioContextResume(); // ✅ fixed: resume audio after first tap on mobile
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.audioUnlockRegistered = false;
+      if (this.pointerUnlockHandler) {
+        this.input?.off('pointerdown', this.pointerUnlockHandler);
+        this.pointerUnlockHandler = undefined;
+      }
+      if (this.keyboardUnlockHandler && this.input?.keyboard) {
+        this.input.keyboard.off('keydown', this.keyboardUnlockHandler);
+        this.keyboardUnlockHandler = undefined;
+      }
+      if (this.resumeAudioContextHandler) {
+        this.input?.off('pointerdown', this.resumeAudioContextHandler, this);
+        this.resumeAudioContextHandler = undefined;
+      }
     });
 
     const centerX = this.scale.width / 2;
@@ -30,7 +52,7 @@ class MenuScene extends Phaser.Scene {
     this.tweens.add({ targets: logoImage, y: 92, ease: 'Back.easeOut', duration: 900 });
 
     const heroContainer = this.add.container(centerX, 224);
-    heroContainer.setDepth(2);
+    heroContainer.setDepth(6); // ✅ fixed: ensure hero content renders above backdrop
 
     const heroShadow = this.add.rectangle(0, 22, 660, 232, 0x020617, 0.28);
     heroShadow.setOrigin(0.5);
@@ -96,7 +118,7 @@ class MenuScene extends Phaser.Scene {
     const missionStates = getMissionStates();
 
     const statsContainer = this.add.container(centerX, 360);
-    statsContainer.setDepth(2);
+    statsContainer.setDepth(6); // ✅ fixed: elevate stats above overlay
 
     const statsBackground = this.add.rectangle(0, 0, 640, 108, 0x0f172a, 0.58);
     statsBackground.setOrigin(0.5);
@@ -132,7 +154,7 @@ class MenuScene extends Phaser.Scene {
 
     const missionPanelHeight = Math.max(120, 84 + missionStates.length * 34);
     const missionContainer = this.add.container(centerX, 360 + missionPanelHeight / 2 + 72);
-    missionContainer.setDepth(2);
+    missionContainer.setDepth(6); // ✅ fixed: ensure mission panel on top
 
     const missionShadow = this.add.rectangle(0, 18, 660, missionPanelHeight + 32, 0x020617, 0.26);
     missionShadow.setOrigin(0.5);
@@ -195,6 +217,8 @@ class MenuScene extends Phaser.Scene {
       variant: 'secondary',
       width: 248,
     });
+    howToButton.setDepth(14); // ✅ fixed: keep primary controls above overlays
+    languageButton.setDepth(14); // ✅ fixed: keep primary controls above overlays
 
     const modeList = Object.values(GameConfig.game.modes);
     const columns = Math.min(2, modeList.length);
@@ -216,6 +240,7 @@ class MenuScene extends Phaser.Scene {
         },
         width: 260,
       });
+      button.setDepth(14); // ✅ fixed: bring mode buttons forward
 
       if (mode.id === preferredMode) {
         this.tweens.add({ targets: button, scale: { from: 1.05, to: 1 }, duration: 280 });
@@ -316,8 +341,19 @@ class MenuScene extends Phaser.Scene {
       simpleAudio.resume().catch(() => undefined);
     };
 
-    this.input.once('pointerdown', unlock, this);
-    this.input.keyboard?.once('keydown', unlock, this);
+    this.pointerUnlockHandler = () => {
+      // ✅ fixed: ensure pointer unlock cleans itself up
+      unlock();
+      this.pointerUnlockHandler = undefined;
+    };
+    this.keyboardUnlockHandler = () => {
+      // ✅ fixed: ensure keyboard unlock cleans itself up
+      unlock();
+      this.keyboardUnlockHandler = undefined;
+    };
+
+    this.input.once('pointerdown', this.pointerUnlockHandler);
+    this.input.keyboard?.once('keydown', this.keyboardUnlockHandler);
   }
 
   private changeLanguage(): void {
@@ -334,7 +370,28 @@ class MenuScene extends Phaser.Scene {
     this.registry.set('mode', mode);
     persistModePreference(mode);
     const dailySeed = (this.registry.get('dailySeed') as string) ?? '';
+    this.scene.stop(this.scene.key); // ✅ fixed: stop scene before switching
     this.scene.start('Game', { mode, dailySeed });
+  }
+
+  private installAudioContextResume(): void {
+    if (!this.input || this.resumeAudioContextHandler) {
+      return;
+    }
+
+    this.resumeAudioContextHandler = () => {
+      const context = this.sound?.context;
+      if (context && context.state === 'suspended') {
+        context.resume().catch(() => undefined); // ✅ fixed: resume audio context on first tap
+      }
+      simpleAudio.resume().catch(() => undefined);
+      if (this.resumeAudioContextHandler) {
+        this.input?.off('pointerdown', this.resumeAudioContextHandler, this);
+        this.resumeAudioContextHandler = undefined;
+      }
+    };
+
+    this.input.once('pointerdown', this.resumeAudioContextHandler, this);
   }
 }
 

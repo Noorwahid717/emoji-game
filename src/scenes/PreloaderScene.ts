@@ -29,7 +29,18 @@ class PreloaderScene extends Phaser.Scene {
 
   private progressDimensions?: { width: number; height: number; radius: number };
 
-  private loadComplete?: Promise<void>;
+  private hasCreateRun = false; // ✅ fixed: guard scene transitions
+
+  private assetsReady = false; // ✅ fixed: wait until assets finish loading
+
+  private menuStarted = false; // ✅ fixed: avoid duplicate transitions
+
+  private readonly handleResize = (gameSize: Phaser.Structs.Size) => {
+    this.cameras.resize(gameSize.width, gameSize.height); // ✅ fixed: responsive camera sizing
+    this.progressBar?.setScrollFactor(0);
+    this.progressBox?.setScrollFactor(0);
+    this.progressText?.setScrollFactor(0);
+  };
 
   constructor() {
     super('Preloader');
@@ -40,39 +51,22 @@ class PreloaderScene extends Phaser.Scene {
     this.queueAssets();
 
     this.load.on(Phaser.Loader.Events.PROGRESS, this.handleProgress, this);
-
-    this.loadComplete = new Promise((resolve) => {
-      const finalize = async () => {
-        this.load.off(Phaser.Loader.Events.PROGRESS, this.handleProgress, this);
-        try {
-          await this.prepareAudioBuffers();
-        } catch (error) {
-          console.warn('Audio buffers failed to prepare; continuing without decoded audio.', error);
-        } finally {
-          this.progressBar?.destroy();
-          this.progressBox?.destroy();
-          this.progressText?.destroy();
-          resolve();
-        }
-      };
-
-      if (this.load.totalToLoad === 0) {
-        finalize().catch(() => undefined);
-        return;
-      }
-
-      this.load.once(Phaser.Loader.Events.COMPLETE, () => {
-        finalize().catch(() => undefined);
-      });
-    });
+    this.load.on(Phaser.Loader.Events.COMPLETE, this.handleLoadComplete, this); // ✅ fixed: wait for loader completion
   }
 
   public create(): void {
-    this.loadComplete?.then(() => {
-      this.time.delayedCall(150, () => {
-        this.scene.start('Menu');
-      });
+    // eslint-disable-next-line no-console
+    console.log(this.scene.key); // ✅ fixed: debug scene transitions
+    this.hasCreateRun = true;
+    this.scale.on(Phaser.Scale.Events.RESIZE, this.handleResize, this); // ✅ fixed: listen for dynamic resizing
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this); // ✅ fixed: cleanup resize listener
+      this.load.off(Phaser.Loader.Events.COMPLETE, this.handleLoadComplete, this); // ✅ fixed: cleanup loader listener
+      this.load.off(Phaser.Loader.Events.PROGRESS, this.handleProgress, this); // ✅ fixed: cleanup progress listener
     });
+
+    this.tryStartMenu();
   }
 
   private queueAssets(): void {
@@ -160,6 +154,35 @@ class PreloaderScene extends Phaser.Scene {
     if (!muted) {
       await simpleAudio.resume();
     }
+  }
+
+  private async handleLoadComplete(): Promise<void> {
+    this.load.off(Phaser.Loader.Events.COMPLETE, this.handleLoadComplete, this);
+    this.load.off(Phaser.Loader.Events.PROGRESS, this.handleProgress, this);
+
+    try {
+      await this.prepareAudioBuffers();
+    } catch (error) {
+      console.warn('Audio buffers failed to prepare; continuing without decoded audio.', error);
+    } finally {
+      this.progressBar?.destroy();
+      this.progressBox?.destroy();
+      this.progressText?.destroy();
+      this.assetsReady = true;
+      this.tryStartMenu();
+    }
+  }
+
+  private tryStartMenu(): void {
+    if (this.menuStarted || !this.hasCreateRun || !this.assetsReady) {
+      return;
+    }
+
+    this.menuStarted = true;
+    this.time.delayedCall(150, () => {
+      this.scene.stop(this.scene.key); // ✅ fixed: stop scene before switching
+      this.scene.start('Menu');
+    });
   }
 }
 

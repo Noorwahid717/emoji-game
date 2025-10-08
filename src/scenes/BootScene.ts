@@ -45,11 +45,14 @@ class BootScene extends Phaser.Scene {
   }
 
   public create(): void {
+    // eslint-disable-next-line no-console
+    console.log(this.scene.key); // ✅ fixed: debug scene transitions
     const hasAudio = simpleAudio.init();
     this.registry.set('simpleAudio', simpleAudio);
     this.registry.set('hasAudio', hasAudio);
     simpleAudio.setMuted((this.registry.get('audioMuted') as boolean) ?? false);
 
+    this.scene.stop(this.scene.key); // ✅ fixed: stop scene before switching
     this.scene.start('Preloader');
   }
 }
