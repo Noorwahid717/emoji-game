@@ -51,7 +51,7 @@ class PreloaderScene extends Phaser.Scene {
     this.queueAssets();
 
     this.load.on(Phaser.Loader.Events.PROGRESS, this.handleProgress, this);
-    this.load.on(Phaser.Loader.Events.COMPLETE, this.handleLoadComplete, this); // ✅ fixed: wait for loader completion
+    this.load.once(Phaser.Loader.Events.COMPLETE, this.handleLoadComplete, this);
   }
 
   public create(): void {
@@ -62,8 +62,11 @@ class PreloaderScene extends Phaser.Scene {
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this); // ✅ fixed: cleanup resize listener
-      this.load.off(Phaser.Loader.Events.COMPLETE, this.handleLoadComplete, this); // ✅ fixed: cleanup loader listener
-      this.load.off(Phaser.Loader.Events.PROGRESS, this.handleProgress, this); // ✅ fixed: cleanup progress listener
+      this.load.off(Phaser.Loader.Events.PROGRESS, this.handleProgress, this);
+      this.load.off(Phaser.Loader.Events.COMPLETE, this.handleLoadComplete, this);
+      this.tweens.killAll();
+      this.time?.removeAllEvents();
+      this.input?.removeAllListeners();
     });
 
     this.tryStartMenu();
@@ -157,17 +160,24 @@ class PreloaderScene extends Phaser.Scene {
   }
 
   private async handleLoadComplete(): Promise<void> {
-    this.load.off(Phaser.Loader.Events.COMPLETE, this.handleLoadComplete, this);
     this.load.off(Phaser.Loader.Events.PROGRESS, this.handleProgress, this);
+    this.load.off(Phaser.Loader.Events.COMPLETE, this.handleLoadComplete, this);
 
     try {
       await this.prepareAudioBuffers();
     } catch (error) {
       console.warn('Audio buffers failed to prepare; continuing without decoded audio.', error);
     } finally {
-      this.progressBar?.destroy();
-      this.progressBox?.destroy();
-      this.progressText?.destroy();
+      if (this.progressText) {
+        this.progressText.setText(t('preloader.starting'));
+        this.tweens.add({
+          targets: this.progressText,
+          alpha: { from: 1, to: 0 },
+          duration: 220,
+          delay: 80,
+        });
+      }
+
       this.assetsReady = true;
       this.tryStartMenu();
     }
@@ -180,6 +190,12 @@ class PreloaderScene extends Phaser.Scene {
 
     this.menuStarted = true;
     this.time.delayedCall(150, () => {
+      this.progressBar?.destroy();
+      this.progressBox?.destroy();
+      this.progressText?.destroy();
+      this.progressBar = undefined;
+      this.progressBox = undefined;
+      this.progressText = undefined;
       this.scene.stop(this.scene.key); // ✅ fixed: stop scene before switching
       this.scene.start('Menu');
     });
