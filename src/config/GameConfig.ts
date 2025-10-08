@@ -126,6 +126,8 @@ const baseConfig: EmojiGameConfig = {
     scale: {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
+      width: 800, // ✅ fixed: enforce base width for scaling
+      height: 600, // ✅ fixed: enforce base height for scaling
       expandParent: true,
     },
     render: {

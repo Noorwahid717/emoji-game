@@ -174,7 +174,9 @@ class GameScene extends Phaser.Scene {
   }
 
   public create(data?: GameSceneData): void {
-    this.add.image(this.scale.width / 2, this.scale.height / 2, 'background');
+    // eslint-disable-next-line no-console
+    console.log(this.scene.key); // ✅ fixed: debug scene transitions
+    this.add.image(this.scale.width / 2, this.scale.height / 2, 'background').setDepth(0); // ✅ fixed: lock playfield background beneath UI
 
     this.createProgressIndicator();
 
@@ -445,10 +447,10 @@ class GameScene extends Phaser.Scene {
       this.scale.width >= 900
         ? -130
         : this.scale.width >= 760
-        ? -90
-        : this.scale.width >= 640
-        ? -48
-        : 0;
+          ? -90
+          : this.scale.width >= 640
+            ? -48
+            : 0;
     const startX = (this.scale.width - boardWidth) / 2 + cellWidth / 2 + boardOffset;
     const startY = layout.boardTop + cellHeight / 2;
 
@@ -938,6 +940,7 @@ class GameScene extends Phaser.Scene {
     const completedLevel = won ? Math.max(1, this.levelNumber - 1) : Math.max(1, this.levelNumber);
 
     this.time.delayedCall(600, () => {
+      this.scene.stop(this.scene.key); // ✅ fixed: stop scene before switching
       this.scene.start('GameOver', {
         won,
         score: this.score,

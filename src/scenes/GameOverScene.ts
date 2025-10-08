@@ -25,6 +25,8 @@ class GameOverScene extends Phaser.Scene {
   }
 
   public create(data?: GameOverData): void {
+    // eslint-disable-next-line no-console
+    console.log(this.scene.key); // ✅ fixed: debug scene transitions
     const payload: GameOverData = data ?? {
       won: false,
       score: 0,
@@ -39,7 +41,10 @@ class GameOverScene extends Phaser.Scene {
       levelsCompleted: 0,
     };
 
-    this.add.image(this.scale.width / 2, this.scale.height / 2, 'background').setAlpha(0.6);
+    this.add
+      .image(this.scale.width / 2, this.scale.height / 2, 'background')
+      .setAlpha(0.6)
+      .setDepth(0); // ✅ fixed: keep modal UI above background
 
     const panel = this.add.rectangle(400, 300, 540, 360, 0x0f172a, 0.9);
     panel.setStrokeStyle(4, payload.won ? 0x22c55e : 0xf97316, 0.9);
@@ -91,6 +96,7 @@ class GameOverScene extends Phaser.Scene {
     new PrimaryButton(this, 400, 380, {
       label: t('gameover.playAgain'),
       onClick: () => {
+        this.scene.stop(this.scene.key); // ✅ fixed: stop scene before switching
         this.scene.start('Game', { mode: payload.mode, dailySeed: payload.dailySeed });
       },
       variant: 'primary',
@@ -99,6 +105,7 @@ class GameOverScene extends Phaser.Scene {
     new PrimaryButton(this, 400, 460, {
       label: t('gameover.menu'),
       onClick: () => {
+        this.scene.stop(this.scene.key); // ✅ fixed: stop scene before switching
         this.scene.start('Menu');
       },
       variant: 'secondary',
