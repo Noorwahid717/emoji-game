@@ -44,6 +44,7 @@ body {
   box-sizing: border-box;
   background: linear-gradient(180deg, rgba(15, 23, 42, 0.3), rgba(15, 23, 42, 0.6));
   box-shadow: 0 22px 56px rgba(15, 23, 42, 0.48);
+  position: relative;
 }
 
 #game-root canvas {
@@ -66,6 +67,40 @@ canvas,
   position: absolute; /* ✅ fixed: allow overlay UI elements */
   z-index: 10;
   pointer-events: auto;
+}
+
+.ui-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  pointer-events: none;
+}
+
+.accessible-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(12px, 3vh, 20px);
+  padding-top: clamp(18px, 6vh, 48px);
+  opacity: 0.01;
+  font-family: 'Poppins', 'Segoe UI', sans-serif;
+  color: #f8fafc;
+}
+
+.accessible-menu h1 {
+  margin: 0;
+  font-size: clamp(28px, 6vw, 48px);
+  font-weight: 700;
+}
+
+.accessible-menu button {
+  pointer-events: none;
+  font-size: clamp(18px, 4.5vw, 24px);
+  padding: 16px 28px;
+  border-radius: 16px;
+  border: none;
+  background: rgba(15, 23, 42, 0.4);
+  color: inherit;
 }
 
 @media (max-width: 520px) {

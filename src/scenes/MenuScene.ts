@@ -9,13 +9,13 @@ import simpleAudio from '../core/audio/SimpleAudio';
 import PrimaryButton from '../ui/PrimaryButton';
 
 class MenuScene extends Phaser.Scene {
-  private audioUnlockRegistered = false;
+  private pointerUnlockHandler?: () => void;
 
-  private pointerUnlockHandler?: (pointer: Phaser.Input.Pointer) => void;
+  private accessibleOverlay?: HTMLDivElement;
 
-  private keyboardUnlockHandler?: (event: KeyboardEvent) => void;
-
-  private resumeAudioContextHandler?: () => void;
+  private readonly handleResize = (gameSize: Phaser.Structs.Size) => {
+    this.cameras.resize(gameSize.width, gameSize.height);
+  };
 
   constructor() {
     super('Menu');
@@ -26,22 +26,22 @@ class MenuScene extends Phaser.Scene {
     console.log(this.scene.key); // ✅ fixed: debug scene transitions
     this.add.image(400, 300, 'background').setDepth(0); // ✅ fixed: restore background layering order
 
-    this.installAudioUnlock();
-    this.installAudioContextResume(); // ✅ fixed: resume audio after first tap on mobile
+    this.registerAudioUnlock();
+    this.ensureAccessibleOverlay();
+    this.scale.on(Phaser.Scale.Events.RESIZE, this.handleResize, this);
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.audioUnlockRegistered = false;
       if (this.pointerUnlockHandler) {
         this.input?.off('pointerdown', this.pointerUnlockHandler);
         this.pointerUnlockHandler = undefined;
       }
-      if (this.keyboardUnlockHandler && this.input?.keyboard) {
-        this.input.keyboard.off('keydown', this.keyboardUnlockHandler);
-        this.keyboardUnlockHandler = undefined;
-      }
-      if (this.resumeAudioContextHandler) {
-        this.input?.off('pointerdown', this.resumeAudioContextHandler, this);
-        this.resumeAudioContextHandler = undefined;
+      this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
+      this.tweens.killAll();
+      this.time?.removeAllEvents();
+      this.input?.removeAllListeners();
+      if (this.accessibleOverlay) {
+        this.accessibleOverlay.remove();
+        this.accessibleOverlay = undefined;
       }
     });
 
@@ -217,8 +217,8 @@ class MenuScene extends Phaser.Scene {
       variant: 'secondary',
       width: 248,
     });
-    howToButton.setDepth(14); // ✅ fixed: keep primary controls above overlays
-    languageButton.setDepth(14); // ✅ fixed: keep primary controls above overlays
+    howToButton.setDepth(120); // ✅ fixed: keep primary controls above overlays
+    languageButton.setDepth(120); // ✅ fixed: keep primary controls above overlays
 
     const modeList = Object.values(GameConfig.game.modes);
     const columns = Math.min(2, modeList.length);
@@ -240,7 +240,7 @@ class MenuScene extends Phaser.Scene {
         },
         width: 260,
       });
-      button.setDepth(14); // ✅ fixed: bring mode buttons forward
+      button.setDepth(120); // ✅ fixed: bring mode buttons forward
 
       if (mode.id === preferredMode) {
         this.tweens.add({ targets: button, scale: { from: 1.05, to: 1 }, duration: 280 });
@@ -323,37 +323,65 @@ class MenuScene extends Phaser.Scene {
     });
   }
 
-  private installAudioUnlock(): void {
-    if (this.audioUnlockRegistered || !this.input) {
+  private registerAudioUnlock(): void {
+    if (!this.input) {
       return;
     }
 
-    if (!this.sound || !this.sound.locked) {
-      return;
+    if (this.pointerUnlockHandler) {
+      this.input.off('pointerdown', this.pointerUnlockHandler);
     }
 
-    this.audioUnlockRegistered = true;
-
-    const unlock = () => {
-      if (this.sound.locked) {
+    this.pointerUnlockHandler = () => {
+      const context = this.sound?.context;
+      if (context && context.state === 'suspended') {
+        context.resume().catch(() => undefined);
+      }
+      if (this.sound?.unlock) {
         this.sound.unlock();
       }
       simpleAudio.resume().catch(() => undefined);
-    };
-
-    this.pointerUnlockHandler = () => {
-      // ✅ fixed: ensure pointer unlock cleans itself up
-      unlock();
       this.pointerUnlockHandler = undefined;
     };
-    this.keyboardUnlockHandler = () => {
-      // ✅ fixed: ensure keyboard unlock cleans itself up
-      unlock();
-      this.keyboardUnlockHandler = undefined;
-    };
 
-    this.input.once('pointerdown', this.pointerUnlockHandler);
-    this.input.keyboard?.once('keydown', this.keyboardUnlockHandler);
+    this.input.once('pointerdown', this.pointerUnlockHandler, this);
+  }
+
+  private ensureAccessibleOverlay(): void {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    const root = document.getElementById('game-root');
+    if (!root) {
+      return;
+    }
+
+    if (!this.accessibleOverlay) {
+      const overlay = document.createElement('div');
+      overlay.classList.add('ui-overlay', 'accessible-menu');
+      root.appendChild(overlay);
+      this.accessibleOverlay = overlay;
+    }
+
+    const overlay = this.accessibleOverlay;
+    overlay.innerHTML = '';
+
+    const heading = document.createElement('h1');
+    heading.textContent = t('app.title');
+
+    const startButton = document.createElement('button');
+    startButton.type = 'button';
+    startButton.textContent = t('menu.startMode', {
+      mode: t(GameConfig.game.modes.classic.labelKey),
+    });
+
+    const locale = getLocale();
+    const settingsButton = document.createElement('button');
+    settingsButton.type = 'button';
+    settingsButton.textContent = t('menu.language', { language: getLocaleName(locale) });
+
+    overlay.append(heading, startButton, settingsButton);
   }
 
   private changeLanguage(): void {
@@ -372,26 +400,6 @@ class MenuScene extends Phaser.Scene {
     const dailySeed = (this.registry.get('dailySeed') as string) ?? '';
     this.scene.stop(this.scene.key); // ✅ fixed: stop scene before switching
     this.scene.start('Game', { mode, dailySeed });
-  }
-
-  private installAudioContextResume(): void {
-    if (!this.input || this.resumeAudioContextHandler) {
-      return;
-    }
-
-    this.resumeAudioContextHandler = () => {
-      const context = this.sound?.context;
-      if (context && context.state === 'suspended') {
-        context.resume().catch(() => undefined); // ✅ fixed: resume audio context on first tap
-      }
-      simpleAudio.resume().catch(() => undefined);
-      if (this.resumeAudioContextHandler) {
-        this.input?.off('pointerdown', this.resumeAudioContextHandler, this);
-        this.resumeAudioContextHandler = undefined;
-      }
-    };
-
-    this.input.once('pointerdown', this.resumeAudioContextHandler, this);
   }
 }
 

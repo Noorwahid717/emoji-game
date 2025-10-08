@@ -134,6 +134,10 @@ const baseConfig: EmojiGameConfig = {
       pixelArt: false,
       antialias: true,
     },
+    audio: {
+      disableWebAudio: false,
+      noAudio: false,
+    },
     fps: {
       target: 60,
       min: 30,
